@@ -24,16 +24,16 @@
 #endif
 
 #include "general.h"
-#include "gettoken.h"
-#include "midi.h"
-#include "parser.h"
-#include "utility.h"
+#include "Tokens.h"
+#include "Midi.h"
+#include "Parser.h"
+#include "Utility.h"
 
 #ifndef WINDOWS
 
 struct itimerval mr_timer;
 
-void signal_catch()
+void signal_catch(int sig)
 {
   signal(SIGPROF, signal_catch);
 }
@@ -63,7 +63,7 @@ char *dirname_m(char *dir)
   return dir + i;
 }
 
-void error(char *expect, char *got)
+void error(const char *expect, char *got)
 {
   printf(">> In file: %s\n", current_filename);
   printf("Parse Error:  Expected '%s' and got '%s' on line %d.\n",
@@ -1037,7 +1037,7 @@ int main_parser(FILE *in)
 #endif
 
 #ifndef WINDOWS
-  signal_catch();
+  signal_catch(0);
   mr_timer.it_value.tv_sec = 0;
   mr_timer.it_value.tv_usec = 0;
 #endif

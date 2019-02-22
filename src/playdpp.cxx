@@ -20,9 +20,28 @@
 #endif
 
 #include "general.h"
-#include "parser.h"
+#include "Parser.h"
 
+// FIXME: OUCH
+char defines[MAX_LITERAL_SPACE];
+int line;
 struct song_info_t song_info;
+unsigned char pattern[PATTERN_HEAP_SIZE];
+unsigned int pattern_duration[PATTERN_HEAP_SIZE];
+unsigned char pattern_volume[PATTERN_HEAP_SIZE];
+unsigned char pattern_channel[PATTERN_HEAP_SIZE];
+int sections[SECTIONS_HEAP_SIZE];
+int song[MAX_SONG_SIZE];
+int patterns_ptr;
+int sections_ptr;
+unsigned char pattern_names[MAX_LITERAL_SPACE];
+unsigned char section_names[MAX_LITERAL_SPACE];
+unsigned char song_name[256];
+int midiout;
+char interactive;
+FILE *out;
+char *current_filename;
+
 
 #ifdef WINDOWS
 HMIDIOUT inHandle;

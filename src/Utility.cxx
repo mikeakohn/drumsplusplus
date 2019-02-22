@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "general.h"
-#include "utility.h"
+#include "Utility.h"
 
 int insert_define(char *buffer, char *token, char *value)
 {

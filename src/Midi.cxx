@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "general.h"
-#include "midi.h"
+#include "Midi.h"
 
 #define DIVISIONS 240
 

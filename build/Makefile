@@ -4,19 +4,19 @@ CPP=g++
 
 CFLAGS=-Wall $(DEBUG) -O3
 OBJECTS= \
-  gettoken.o \
-  midi.o \
-  parser.o \
-  utility.o
+  Tokens.o \
+  Midi.o \
+  Parser.o \
+  Utility.o
 
 default: $(OBJECTS)
-	$(CC) -o ../playdpp ../src/playdpp.c \
+	$(CPP) -o ../playdpp ../src/playdpp.cxx \
 	  $(OBJECTS) \
 	  $(CFLAGS) $(LIBS)
 
-%.o: %.c %.h
-	$(CC) -c $< -o $*.o $(CFLAGS)
+%.o: %.cxx %.h
+	$(CPP) -c $< -o $*.o $(CFLAGS)
 
-%.o: %.c
-	$(CC) -c $< -o $*.o $(CFLAGS)
+%.o: %.cxx
+	$(CPP) -c $< -o $*.o $(CFLAGS)
 

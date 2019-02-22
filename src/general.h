@@ -37,24 +37,25 @@ struct note_t
   int midi_channel;
 };
 
-char defines[MAX_LITERAL_SPACE];
-int line;
-struct song_info_t song_info;
-unsigned char pattern[PATTERN_HEAP_SIZE];
-unsigned int pattern_duration[PATTERN_HEAP_SIZE];
-unsigned char pattern_volume[PATTERN_HEAP_SIZE];
-unsigned char pattern_channel[PATTERN_HEAP_SIZE];
-int sections[SECTIONS_HEAP_SIZE];
-int song[MAX_SONG_SIZE];
-int patterns_ptr;
-int sections_ptr;
-unsigned char pattern_names[MAX_LITERAL_SPACE];
-unsigned char section_names[MAX_LITERAL_SPACE];
-unsigned char song_name[256];
-int midiout;
-char interactive;
-FILE *out;
-char *current_filename;
+// FIXME - OUCH
+extern char defines[MAX_LITERAL_SPACE];
+extern int line;
+extern struct song_info_t song_info;
+extern unsigned char pattern[PATTERN_HEAP_SIZE];
+extern unsigned int pattern_duration[PATTERN_HEAP_SIZE];
+extern unsigned char pattern_volume[PATTERN_HEAP_SIZE];
+extern unsigned char pattern_channel[PATTERN_HEAP_SIZE];
+extern int sections[SECTIONS_HEAP_SIZE];
+extern int song[MAX_SONG_SIZE];
+extern int patterns_ptr;
+extern int sections_ptr;
+extern unsigned char pattern_names[MAX_LITERAL_SPACE];
+extern unsigned char section_names[MAX_LITERAL_SPACE];
+extern unsigned char song_name[256];
+extern int midiout;
+extern char interactive;
+extern FILE *out;
+extern char *current_filename;
 
 #endif
 
