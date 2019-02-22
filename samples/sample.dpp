@@ -1,0 +1,52 @@
+
+set bpm=120;
+set defaultvolume=127;
+set drift=5;
+set timesignature=4/4;
+
+define bassdrum 36
+define snare 38
+define highhat 42
+define open_highhat 46
+
+pattern main
+{
+  bassdrum: 1 1.5 3;
+  snare: 2 4:127;
+  highhat: 1 2 3 4;
+}
+
+pattern test
+{
+  set bpm=240;
+  set timesignature=3/4;
+
+  bassdrum: 1 2 3;
+  highhat: 1 2 3;
+}
+
+pattern fill2
+{
+  bassdrum: 1 3;
+  snare: 2 4:%120;
+  highhat: 1 2 3;
+  open_highhat: 4;
+}
+
+section a
+{
+  play: main, test;
+}
+
+section b
+{
+  play: 3 main, fill2;
+}
+
+song test_song
+{
+  // play: test, test;
+  play: 2 test, a, b, 2a;
+}
+
+

@@ -1,0 +1,90 @@
+
+set bpm=120;
+set defaultvolume=127;
+set drift=5;
+set timesignature=4/4;
+
+include "drum_defines.inc"
+
+pattern pattern_1
+{
+  bassdrum: 1:100 2.8 3 3.5 ;
+  snare: 2 4;
+  closed_hihat: 1 2 3;
+  open_hihat: 4;
+}
+
+pattern pattern_1b
+{
+  bassdrum: 1 2.8 3 3.5 ;
+  snare: 2 4;
+  closed_hihat: 1 2 3 4;
+  crash_cymbal1: 4;
+}
+
+pattern fill1
+{
+  hi_mid_tom: 1 1.25 1.5 1.75;
+  low_mid_tom: 2 2.25 2.5 2.75;
+  high_floor_tom: 3 3.25 3.5 3.75;
+  crash_cymbal2: 4; 
+}
+
+pattern pattern_2
+{
+  bassdrum: 1:120 2.8 3 3.5 ;
+  snare: 2 4;
+  cowbell: 1 2 2.8 3 4;
+}
+
+pattern pattern_2a
+{
+  bassdrum: 1 2.8 3 3.5 ;
+  snare: 2 4;
+  cowbell: 1 2 2.8 3 4;
+  hi_wood_block: 1 1.2 1.4 1.6 1.8;
+  low_wood_block: 2.8 3 3.5 3.75;
+}
+
+pattern pattern_2b
+{
+  long_whistle: 1;
+  bassdrum: 1 2.8 3 3.5 ;
+  snare: 2 4:127;
+  cowbell: 1 2 2.8 3 4;
+  hi_wood_block: 1 1.2 1.4 1.6 1.8;
+  low_wood_block: 2.8 3 3.5 3.75;
+}
+
+pattern pattern_3
+{
+  bassdrum: 1 2.8 3 3.5 ;
+  snare: 2 4:127;
+  cowbell: 1 2 2.8 3 4;
+  mute_triangle: 1 1.2 1.6 1.8;
+  open_triangle: 1.4 2.8 3 3.5 3.75;
+  maracas: 1 2 4;
+}
+
+
+section a
+{
+  play: 3 pattern_1, pattern_1b;
+}
+
+section b
+{
+  play: 4 pattern_2;
+}
+
+section c
+{
+  play: 3 pattern_2a, pattern_2b, 4 pattern_3;
+}
+
+song test_song
+{
+  play: a, fill1, b, c;
+}
+
+
