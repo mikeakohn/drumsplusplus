@@ -14,72 +14,77 @@
 #include <string.h>
 
 #include "general.h"
-
-/* MIDI */
+#include "midi.h"
 
 #define DIVISIONS 240
 
-int marker;
+long marker;
 
 int write_long_b(FILE *out, int n)
 {
-  putc(((n>>24)&255),out);
-  putc(((n>>16)&255),out);
-  putc(((n>>8)&255),out);
-  putc((n&255),out);
+  putc(((n >> 24) & 0xff), out);
+  putc(((n >> 16) & 0xff), out);
+  putc(((n >> 8) & 0xff), out);
+  putc((n & 0xff), out);
 
   return 0;
 }
 
 int write_word_b(FILE *out, int n)
 {
-  putc(((n>>8)&255),out);
-  putc((n&255),out);
+  putc(((n >> 8) & 0xff), out);
+  putc((n & 0xff), out);
 
   return 0;
 }
 
 void write_var(FILE *out, int i)
 {
-int t,k;
+  int t, k;
 
-  t=7;
-  while((i>>t)!=0)
+  t = 7;
+
+  while((i >> t) != 0)
   {
-    t=t+7;
+    t = t + 7;
   }
 
-  t=t-7;
-  for (k=t; k>=0; k=k-7)
+  t = t - 7;
+
+  for (k = t; k >= 0; k = k - 7)
   {
-    if (k!=0)
-    { putc(((i>>k)&127)+128,out); }
+    if (k != 0)
+    {
+      putc(((i >> k) & 127) + 128, out);
+    }
       else
-    { putc(((i>>k)&127),out); }
+    {
+      putc(((i >> k) & 127), out);
+    }
   }
 }
 
 void write_midi_header(FILE *out)
 {
-char *i={ "Created by Drums++ (http://dpp.mikekohn.net/)." };
+  const char *i = "Created by Drums++ (http://dpp.mikekohn.net/).";
 
   fprintf(out,"MThd");
-  write_long_b(out,6);
-  write_word_b(out,0);
-  write_word_b(out,1);
-  write_word_b(out,DIVISIONS);
+  write_long_b(out, 6);
+  write_word_b(out, 0);
+  write_word_b(out, 1);
+  write_word_b(out, DIVISIONS);
 
   fprintf(out,"MTrk");
-  marker=ftell(out);
-  write_long_b(out,0);
+  marker = ftell(out);
+  write_long_b(out, 0);
 
   if (song_name[0]!=0)
   {
-    write_var(out,0);
-    putc(0xff,out);
-    putc(0x03,out);
-    write_var(out,strlen((char *)song_name));
-    fprintf(out,"%s",song_name);
+    write_var(out, 0);
+    putc(0xff, out);
+    putc(0x03, out);
+    write_var(out, strlen((char *)song_name));
+    fprintf(out,"%s", song_name);
   }
 
   write_var(out, 0);

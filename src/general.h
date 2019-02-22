@@ -56,32 +56,5 @@ char interactive;
 FILE *out;
 char *current_filename;
 
-/* parser.c */
-
-void error(char *expect, char *got);
-int parse_set(FILE *in);
-int main_parser(FILE *in);
-
-/* utility.c */
-
-int insert_define(char *buffer, char *token, char *value);
-int insert_literal(char *buffer, char *token);
-void print_all(char *buffer);
-int get_define(char *buffer, char *token, char *value);
-int get_literal(char *buffer, char *token);
-int is_number(char *myString);
-int search_end_buffer(int *buffer);
-int find_section(int i);
-int find_pattern(int i);
-void print_name(char *buffer, int i);
-
-/* midi.c */
-
-void write_midi_header(FILE *out);
-void write_midi_note(FILE *out, struct note_t *note);
-void write_midi_footer(FILE *out);
-void write_midi_bpm(FILE *out);
-void write_midi_timesignature(FILE *out);
-
 #endif
 

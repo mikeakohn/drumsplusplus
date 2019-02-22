@@ -20,6 +20,7 @@
 #endif
 
 #include "general.h"
+#include "parser.h"
 
 struct song_info_t song_info;
 

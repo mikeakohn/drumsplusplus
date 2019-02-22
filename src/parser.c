@@ -25,6 +25,9 @@
 
 #include "general.h"
 #include "gettoken.h"
+#include "midi.h"
+#include "parser.h"
+#include "utility.h"
 
 #ifndef WINDOWS
 
