@@ -30,18 +30,18 @@ public:
   void set_interactive() { interactive = 1; }
 
 private:
+  struct Beat
+  {
+    int instrument;
+    int channel;
+    float beat;
+    uint8_t volume;
+  };
+
   int parse_set(Tokens *tokens);
   int parse_define(Tokens *tokens);
   int parse_include(Tokens *tokens, MidiFile *midi_file);
-  int add_beats(
-    Tokens *tokens,
-    int *instrument,
-    float *beat,
-    unsigned char *volume,
-    int *ptr,
-    int i,
-    int *channel,
-    int midi_channel);
+  int add_beats(Tokens *tokens, Beat *beats, int &ptr, int i, int midi_channel);
   int parse_section(Tokens *tokens);
   int parse_pattern(Tokens *tokens);
   int parse_song(Tokens *tokens, MidiFile *midi_file);
@@ -61,6 +61,7 @@ private:
   DWORD play_timer;
 #endif
   int interactive;
+
 };
 
 #endif

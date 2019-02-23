@@ -20,9 +20,17 @@ public:
   Pattern();
   ~Pattern();
 
+  void set_name(const char *name) { this->name = name; }
+  void set_duration(int duration) { this->duration = duration; }
+  void set_volume(int volume) { this->volume = volume; }
+  void set_channel(int channel) { this->channel = channel; }
   void print();
 
+private:
   std::string name;
+  int duration;
+  int volume;
+  int channel;
 
 };
 

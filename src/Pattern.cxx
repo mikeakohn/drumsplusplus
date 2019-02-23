@@ -14,7 +14,10 @@
 
 #include "Pattern.h"
 
-Pattern::Pattern()
+Pattern::Pattern() :
+  duration(0),
+  volume(0),
+  channel(0)
 {
 }
 
