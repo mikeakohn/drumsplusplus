@@ -22,7 +22,6 @@
 
 // FIXME: OUCH
 char defines[MAX_LITERAL_SPACE];
-//struct SongInfo song_info;
 unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
@@ -33,11 +32,6 @@ int patterns_ptr;
 int sections_ptr;
 char pattern_names[MAX_LITERAL_SPACE];
 char section_names[MAX_LITERAL_SPACE];
-//unsigned char song_name[256];
-//int midiout;
-char interactive;
-//FILE *out;
-//const char *current_filename;
 
 int main(int argc, char *argv[])
 {
@@ -48,8 +42,8 @@ int main(int argc, char *argv[])
   const char *infile = "";
   const char *outfile = "/dev/midi00";
   int t;
+  int interactive = 0;
 
-  interactive = 0;
 
   if (argc == 1)
   {
@@ -138,6 +132,9 @@ int main(int argc, char *argv[])
   //current_filename = infile;
 
   song = new Song();
+
+  if (interactive == 1) { song->set_interactive(); }
+
   song->parse(&tokens, &midi_file);
 
 #ifdef DEBUG

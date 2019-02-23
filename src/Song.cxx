@@ -31,7 +31,7 @@
 #include "Song.h"
 #include "Utility.h"
 
-Song::Song()
+Song::Song() : interactive(0)
 {
 }
 

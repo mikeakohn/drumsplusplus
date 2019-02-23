@@ -25,6 +25,7 @@ public:
 
   int parse(Tokens *tokens, MidiFile *midi_file);
   void print_song();
+  void set_interactive() { interactive = 1; }
 
 private:
   int parse_set(Tokens *tokens);
@@ -53,9 +54,9 @@ private:
   struct itimerval play_timer;
 #else
   HMIDIOUT inHandle;
-  DWORD play_timer = 0;
-  #endif
-
+  DWORD play_timer;
+#endif
+  int interactive;
 };
 
 #endif
