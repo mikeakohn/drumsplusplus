@@ -12,17 +12,17 @@
 #ifndef DPP_PATTERN_H
 #define DPP_PATTERN_H
 
+#include <string>
+
 class Pattern
 {
 public:
   Pattern();
   ~Pattern();
 
-private:
+  void print();
+
   std::string name;
-  int duration;
-  int volume;
-  int channel;
 
 };
 

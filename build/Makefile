@@ -7,6 +7,7 @@ OBJECTS= \
   Tokens.o \
   MidiFile.o \
   MidiPlayer.o \
+  Pattern.o \
   Song.o \
   SongInfo.o \
   Utility.o

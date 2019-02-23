@@ -150,7 +150,7 @@ int Song::parse_set(Tokens *tokens)
 
   token_type = tokens->get(token);
 
-  if (token_type != 1)
+  if (token_type != TOKEN_ALPHA)
   {
     print_error(tokens, "setting name", token);
     return -1;
@@ -166,7 +166,7 @@ int Song::parse_set(Tokens *tokens)
 
   token_type = tokens->get(value);
 
-  if (token_type != 2)
+  if (token_type != TOKEN_NUMBER)
   {
     print_error(tokens, "number",equals);
     return -1;
@@ -218,7 +218,7 @@ int Song::parse_set(Tokens *tokens)
 
     token_type = tokens->get(value);
 
-    if (token_type != 2)
+    if (token_type != TOKEN_NUMBER)
     {
       print_error(tokens, "number", value);
       return -1;
@@ -281,7 +281,7 @@ int Song::parse_define(Tokens *tokens)
 
   token_type = tokens->get(token);
 
-  if (token_type != 1)
+  if (token_type != TOKEN_ALPHA)
   {
     print_error(tokens, "define", token);
     return -1;
@@ -306,7 +306,7 @@ int Song::parse_include(Tokens *tokens, MidiFile *midi_file)
 
   token_type = tokens->get(token);
 
-  if (token_type != 4)
+  if (token_type != TOKEN_STRING)
   {
     print_error(tokens, "filename", token);
     return -1;
@@ -370,7 +370,7 @@ int Song::add_beats(
   {
     token_type = tokens->get(token);
 
-    if (token_type != 2)
+    if (token_type != TOKEN_NUMBER)
     {
       print_error(tokens, "Channel number", token);
       return -1;
@@ -419,7 +419,7 @@ int Song::add_beats(
         token_type = tokens->get(token);
       }
 
-      if (token_type != 2)
+      if (token_type != TOKEN_NUMBER)
       {
         print_error(tokens, "volume integer", token);
         return -1;
@@ -445,7 +445,7 @@ int Song::add_beats(
       continue;
     }
 
-    if (token_type != 2)
+    if (token_type != TOKEN_NUMBER)
     {
       print_error(tokens, "a beat number", token);
       continue;
@@ -502,7 +502,7 @@ int Song::parse_pattern(Tokens *tokens)
 
   token_type = tokens->get(token);
 
-  if (token_type != 1)
+  if (token_type != TOKEN_ALPHA)
   {
     printf(">> In file: %s\n", tokens->get_filename());
     printf("Error: Pattern is not alphanumeric on line %d\n",
@@ -537,7 +537,7 @@ printf("parsing pattern: %s\n", token);
     {
       token_type = tokens->get(token);
 
-      if (token_type!=1)
+      if (token_type != TOKEN_ALPHA)
       {
         print_error(tokens, "variable to set", token);
         return -1;
@@ -553,7 +553,7 @@ printf("parsing pattern: %s\n", token);
 
       token_type = tokens->get(token1);
 
-      if (token_type != 2)
+      if (token_type != TOKEN_NUMBER)
       {
         print_error(tokens, "a number", token1);
         return -1;
@@ -586,7 +586,7 @@ printf("parsing pattern: %s\n", token);
 
         token_type = tokens->get(token1);
 
-        if (token_type != 2)
+        if (token_type != TOKEN_NUMBER)
         {
           print_error(tokens, "a number", token1);
           return -1;
@@ -630,7 +630,7 @@ printf("parsing pattern: %s\n", token);
       continue;
     }
 
-    if (token_type==2)
+    if (token_type == TOKEN_NUMBER)
     {
       channel[ptr] = midi_channel;
 
@@ -764,7 +764,7 @@ int Song::parse_section(Tokens *tokens)
 
   token_type = tokens->get(token);
 
-  if (token_type != 1)
+  if (token_type != TOKEN_ALPHA)
   {
     printf(">> In file: %s\n", tokens->get_filename());
     printf("Error: Section is not alphanumeric on line %d\n",
@@ -810,7 +810,7 @@ printf("parsing section: %s\n", token);
         repeat = 1;
         token_type = tokens->get(token);
 
-        if (token_type == 2)
+        if (token_type == TOKEN_NUMBER)
         {
           repeat = atoi(token);
           token_type = tokens->get(token);
@@ -865,7 +865,7 @@ printf("playing song\n");
 
   if (strcmp(token, "{") != 0)
   {
-    if (token_type == 1)
+    if (token_type == TOKEN_ALPHA)
     {
       //song_name[255] = 0;
       //strncpy((char *)song_name, token, 254);
@@ -915,7 +915,8 @@ printf("playing song\n");
         repeat = 1;
 
         token_type = tokens->get(token);
-        if (token_type==2)
+
+        if (token_type == TOKEN_NUMBER)
         {
           repeat = atoi(token);
           token_type = tokens->get(token);
