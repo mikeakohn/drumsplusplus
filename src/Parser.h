@@ -12,9 +12,11 @@
 #ifndef DPP_PARSER_H
 #define DPP_PARSER_H
 
+#include "Tokens.h"
+
 void error(char *expect, char *got);
-int parse_set(FILE *in);
-int main_parser(FILE *in);
+int parse_set(Tokens *tokens);
+int main_parser(Tokens *tokens);
 
 #endif
 

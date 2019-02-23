@@ -9,10 +9,23 @@
  *
  */
 
-#ifndef DPP_GETTOKEN_H
-#define DPP_GETTOKEN_H
+#ifndef DPP_TOKENS_H
+#define DPP_TOKENS_H
 
-int gettoken(FILE *in, char *token);
+class Tokens
+{
+public:
+  Tokens();
+  ~Tokens();
+
+  int open(const char *filename);
+  void close();
+  int get(char *token);
+
+private:
+  FILE *in;
+  int pushback;
+};
 
 #endif
 

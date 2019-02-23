@@ -14,8 +14,7 @@
 #include <ctype.h>
 
 #include "general.h"
-
-int pushback = 0;
+#include "Tokens.h"
 
 /*
 
@@ -28,9 +27,37 @@ Token Types:
 
 */
 
-int gettoken(FILE *in, char *token)
+Tokens::Tokens() :
+  in(NULL),
+  pushback(0)
 {
-  int tokentype = 0;
+}
+
+Tokens::~Tokens()
+{
+}
+
+int Tokens::open(const char *filename)
+{
+  in = fopen(filename, "rb");
+
+  if (in == NULL)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+void Tokens::close()
+{
+  fclose(in);
+  in = NULL;
+}
+
+int Tokens::get(char *token)
+{
+  int token_type = 0;
   int ch, ptr;
   int dotflag;
 
@@ -59,13 +86,13 @@ int gettoken(FILE *in, char *token)
         if (ch!='\n') { pushback = ch; }
       }
 
-      if (tokentype != 0) { break; }
+      if (token_type != 0) { break; }
       continue;
     } 
 
     ch = tolower(ch);
 
-    if (tokentype == 0)
+    if (token_type == 0)
     {
       if (ch == '/')
       {
@@ -113,7 +140,7 @@ again:
         {
           pushback = ch;
           token[ptr++] = '/';
-          tokentype = 3;
+          token_type = 3;
           break;
         }
       }
@@ -121,36 +148,36 @@ again:
       if (ch >= 'a' && ch <= 'z')
       {
         token[ptr++] = ch;
-        tokentype = 1;
+        token_type = 1;
       }
         else
       if (ch >= '0' && ch <= '9')
       {
         token[ptr++] = ch;
-        tokentype = 2;
+        token_type = 2;
       }
         else
       if (ch == '.')
       {
         token[ptr++] = '0';
         token[ptr++] = ch;
-        tokentype = 2;
+        token_type = 2;
       }
         else
       if (ch == '"')
       {
         /* token[ptr++] = ch; */
-        tokentype = 4;
+        token_type = 4;
       }
         else
       {
         token[ptr++] = ch;
-        tokentype = 3;
+        token_type = 3;
         break;
       }
     }
       else
-    if (tokentype == 1)
+    if (token_type == 1)
     {
       if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_')
       {
@@ -163,7 +190,7 @@ again:
       }
     }
       else
-    if (tokentype == 2)
+    if (token_type == 2)
     {
       if (ch >= '0' && ch <= '9')
       {
@@ -182,14 +209,14 @@ again:
       }
     }
       else
-    if (tokentype == 4)
+    if (token_type == 4)
     {
       if (ch == '"') { break; }
       token[ptr++] = ch;
     }
   }
 
-  if (tokentype == 4 && ch != '"')
+  if (token_type == 4 && ch != '"')
   {
     printf(">> In file: %s\n", current_filename);
     printf("Error: Unterminated string on line %d.\n", line);
@@ -199,6 +226,6 @@ again:
   token[ptr] = 0;
   if (ptr == 0) { return -1; }
 
-  return tokentype;
+  return token_type;
 }
 

@@ -55,7 +55,7 @@ extern unsigned char song_name[256];
 extern int midiout;
 extern char interactive;
 extern FILE *out;
-extern char *current_filename;
+extern const char *current_filename;
 
 #endif
 

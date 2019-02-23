@@ -70,22 +70,22 @@ void error(const char *expect, char *got)
     expect, got, line);
 }
 
-int parse_set(FILE *in)
+int parse_set(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   char equals[1024];
   char value[1024];
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
-  if (tokentype != 1)
+  if (token_type != 1)
   {
     error("setting name", token);
     return -1;
   }
 
-  tokentype = gettoken(in, equals);
+  token_type = tokens->get(equals);
 
   if (strcmp(equals, "=") != 0)
   {
@@ -93,9 +93,9 @@ int parse_set(FILE *in)
     return -1;
   }
 
-  tokentype = gettoken(in, value);
+  token_type = tokens->get(value);
 
-  if (tokentype != 2)
+  if (token_type != 2)
   {
     error("number",equals);
     return -1;
@@ -135,7 +135,7 @@ int parse_set(FILE *in)
   {
     song_info.timesignature_beats = atoi(value);
 
-    tokentype = gettoken(in, equals);
+    token_type = tokens->get(equals);
 
     if (strcmp(equals, "/") != 0)
     {
@@ -143,9 +143,9 @@ int parse_set(FILE *in)
       return -1;
     }
 
-    tokentype = gettoken(in, value);
+    token_type = tokens->get(value);
 
-    if (tokentype != 2)
+    if (token_type != 2)
     {
       error("number", value);
       return -1;
@@ -186,7 +186,7 @@ int parse_set(FILE *in)
     return -1;
   }
 
-  tokentype = gettoken(in, equals);
+  token_type = tokens->get(equals);
 
   if (strcmp(equals, ";") != 0)
   {
@@ -197,40 +197,42 @@ int parse_set(FILE *in)
   return 0;
 }
 
-int parse_define(FILE *in)
+int parse_define(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   char value[1024];
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
-  if (tokentype != 1)
+  if (token_type != 1)
   {
     error("define", token);
     return -1;
   }
 
-  tokentype = gettoken(in, value);
+  token_type = tokens->get(value);
 
   insert_define(defines, token, value);
 
   return 0;
 }
 
-int parse_include(FILE *in)
+int parse_include(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   char filename[1024];
   char lastfilename[1024];
   char *old_filename;
   int old_line;
-  FILE *include_in;
+  Tokens *tokens_include;
 
-  tokentype = gettoken(in, token);
+  tokens_include = new Tokens();
 
-  if (tokentype != 4)
+  token_type = tokens->get(token);
+
+  if (token_type != 4)
   {
     error("filename", token);
     return -1;
@@ -244,17 +246,20 @@ int parse_include(FILE *in)
 
     if (dirname_m(lastfilename) != 0)
     {
-      strcpy(filename,lastfilename);
+      strcpy(filename, lastfilename);
       strcat(filename, "/");
     }
   }
   strcat(filename, token);
 
-  include_in=fopen(filename, "rb");
-  if (include_in == 0)
+  if (tokens_include->open(filename) != 0)
   {
     printf(">> In file: %s\n", current_filename);
     printf("Error: included file not found: %s on line %d.\n",filename, line);
+
+    delete tokens_include;
+
+    return -1;
   }
     else
   {
@@ -263,17 +268,20 @@ int parse_include(FILE *in)
     old_filename = current_filename;
     current_filename = filename;
 
-    if (main_parser(include_in) == -1) { return -1; }
+    if (main_parser(tokens_include) == -1) { return -1; }
 
     current_filename = old_filename;
     line = old_line;
   }
 
+  tokens_include->close();
+  delete tokens_include;
+
   return 0;
 }
 
 int add_beats(
-  FILE *in,
+  Tokens *tokens,
   int *instrument,
   float *beat,
   unsigned char *volume,
@@ -282,19 +290,19 @@ int add_beats(
   int *channel,
   int midi_channel)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   int m, modifier, c;
 
   c = 0;
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
   if (strcmp(token, "/") == 0)
   {
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
 
-    if (tokentype != 2)
+    if (token_type != 2)
     {
       error("Channel number", token);
       return -1;
@@ -307,7 +315,7 @@ int add_beats(
       printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n",midi_channel, line);
       midi_channel=9;
     }
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
   }
 
   if (strcmp(token, ":") != 0)
@@ -318,7 +326,7 @@ int add_beats(
 
   while(1)
   {
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
 
     if (strcmp(token, ";") == 0) return 0;
 
@@ -331,17 +339,17 @@ int add_beats(
         return -1;
       }
 
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
       if (strcmp(token, "%") == 0)
       {
         srand(time(NULL));
         modifier = rand() % song_info.drift;
         if ((rand() % 2) == 0) { modifier = -modifier; }
-        tokentype = gettoken(in, token);
+        token_type = tokens->get(token);
       }
 
-      if (tokentype != 2)
+      if (token_type != 2)
       {
         error("volume integer", token);
         return -1;
@@ -366,7 +374,7 @@ int add_beats(
       continue;
     }
 
-    if (tokentype != 2)
+    if (token_type != 2)
     {
       error("a beat number", token);
       continue;
@@ -396,9 +404,9 @@ int add_beats(
   }
 }
 
-int parse_pattern(FILE *in)
+int parse_pattern(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024], token1[1024];
   int instrument[256];
   int channel[256];
@@ -418,9 +426,9 @@ int parse_pattern(FILE *in)
   timesignature_base = song_info.timesignature_base;
   midi_channel = song_info.midi_channel;
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
-  if (tokentype != 1)
+  if (token_type != 1)
   {
     printf(">> In file: %s\n", current_filename);
     printf("Error: Pattern is not alphanumeric on line %d\n", line);
@@ -433,7 +441,7 @@ int parse_pattern(FILE *in)
 printf("parsing pattern: %s\n", token);
 #endif
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
   if (strcmp(token, "{") != 0)
   {
@@ -446,21 +454,21 @@ printf("parsing pattern: %s\n", token);
 
   while(1)
   {
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
 
     if (strcmp(token, "}") == 0) { break;}
 
     if (strcmp(token, "set") == 0)
     {
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
-      if (tokentype!=1)
+      if (token_type!=1)
       {
         error("variable to set", token);
         return -1;
       }
 
-      tokentype = gettoken(in, token1);
+      token_type = tokens->get(token1);
 
       if (strcmp(token1, "=") != 0)
       {
@@ -468,9 +476,9 @@ printf("parsing pattern: %s\n", token);
         return -1;
       }
 
-      tokentype = gettoken(in, token1);
+      token_type = tokens->get(token1);
 
-      if (tokentype != 2)
+      if (token_type != 2)
       {
         error("a number", token1);
         return -1;
@@ -493,7 +501,7 @@ printf("parsing pattern: %s\n", token);
       {
         timesignature_beats = i;
 
-        tokentype = gettoken(in, token1);
+        token_type = tokens->get(token1);
 
         if (strcmp(token1, "/") != 0)
         {
@@ -501,9 +509,9 @@ printf("parsing pattern: %s\n", token);
           return -1;
         }
 
-        tokentype = gettoken(in, token1);
+        token_type = tokens->get(token1);
 
-        if (tokentype != 2)
+        if (token_type != 2)
         {
           error("a number", token1);
           return -1;
@@ -535,7 +543,7 @@ printf("parsing pattern: %s\n", token);
         printf("Warning: Cannot set '%s' in pattern.\n", token);
       }
 
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
       if (strcmp(token, ";") != 0)
       {
@@ -546,10 +554,11 @@ printf("parsing pattern: %s\n", token);
       continue;
     }
 
-    if (tokentype==2)
+    if (token_type==2)
     {
       channel[ptr] = midi_channel;
-      if (add_beats(in, instrument, beat, volume, &ptr, atoi(token), channel, midi_channel) == -1)
+
+      if (add_beats(tokens,instrument, beat, volume, &ptr, atoi(token), channel, midi_channel) == -1)
       {
         return -1;
       }
@@ -572,7 +581,7 @@ printf("parsing pattern: %s\n", token);
 
       channel[ptr] = midi_channel;
 
-      if (add_beats(in, instrument, beat, volume, &ptr, atoi(value), channel, midi_channel) == -1) { return -1; }
+      if (add_beats(tokens, instrument, beat, volume, &ptr, atoi(value), channel, midi_channel) == -1) { return -1; }
     }
   }
 
@@ -668,16 +677,16 @@ printf("%f %f %d %d\n",low_beat,next_beat,pattern_duration[patterns_ptr],pattern
   return 0;
 }
 
-int parse_section(FILE *in)
+int parse_section(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   int i,x;
   int repeat;
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
-  if (tokentype != 1)
+  if (token_type != 1)
   {
     printf(">> In file: %s\n", current_filename);
     printf("Error: Section is not alphanumeric on line %d\n", line);
@@ -690,7 +699,7 @@ printf("parsing section: %s\n", token);
 
   insert_literal((char *)section_names, token);
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
   if (strcmp(token, "{") != 0)
   {
@@ -700,7 +709,7 @@ printf("parsing section: %s\n", token);
 
   while(1)
   {
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
 
     if (strcmp(token, "}") == 0)
     {
@@ -709,7 +718,7 @@ printf("parsing section: %s\n", token);
 
     if (strcmp(token, "play") == 0)
     {
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
       if (strcmp(token, ":") != 0)
       {
@@ -720,12 +729,12 @@ printf("parsing section: %s\n", token);
       while(1)
       {
         repeat = 1;
-        tokentype = gettoken(in, token);
+        token_type = tokens->get(token);
 
-        if (tokentype == 2)
+        if (token_type == 2)
         {
           repeat = atoi(token);
-          tokentype = gettoken(in, token);
+          token_type = tokens->get(token);
         }
 
         i = get_literal((char *)pattern_names, token);
@@ -740,7 +749,7 @@ printf("parsing section: %s\n", token);
           for (x = 0; x < repeat; x++) { sections[sections_ptr++] = i; }
         }
 
-        tokentype = gettoken(in, token);
+        token_type = tokens->get(token);
 
         if (strcmp(token, ";") == 0)
         {
@@ -910,9 +919,9 @@ printf("playing section: %d\n",i);
   }
 }
 
-int parse_song(FILE *in)
+int parse_song(Tokens *tokens)
 {
-  int tokentype;
+  int token_type;
   char token[1024];
   int repeat;
   int i, x;
@@ -921,16 +930,16 @@ int parse_song(FILE *in)
 printf("playing song\n");
 #endif
 
-  tokentype = gettoken(in, token);
+  token_type = tokens->get(token);
 
   if (strcmp(token, "{") != 0)
   {
-    if (tokentype == 1)
+    if (token_type == 1)
     {
       song_name[255] = 0;
       strncpy((char *)song_name, token, 254);
 
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
       if (strcmp(token, "{") != 0)
       {
@@ -955,7 +964,7 @@ printf("playing song\n");
 
   while(1)
   {
-    tokentype = gettoken(in, token);
+    token_type = tokens->get(token);
 
     if (strcmp(token, "}") == 0)
     {
@@ -964,7 +973,7 @@ printf("playing song\n");
 
     if (strcmp(token, "play") == 0)
     {
-      tokentype = gettoken(in, token);
+      token_type = tokens->get(token);
 
       if (strcmp(token, ":") != 0)
       {
@@ -976,11 +985,11 @@ printf("playing song\n");
       {
         repeat = 1;
 
-        tokentype = gettoken(in, token);
-        if (tokentype==2)
+        token_type = tokens->get(token);
+        if (token_type==2)
         {
           repeat = atoi(token);
-          tokentype = gettoken(in, token);
+          token_type = tokens->get(token);
         }
 
         i = get_literal((char *)section_names, token);
@@ -1004,7 +1013,7 @@ printf("playing song\n");
           }
         }
 
-        tokentype = gettoken(in, token);
+        token_type = tokens->get(token);
 
         if (strcmp(token, ";") == 0)
         {
@@ -1028,9 +1037,9 @@ printf("playing song\n");
   return 0;
 }
 
-int main_parser(FILE *in)
+int main_parser(Tokens *tokens)
 {
-  int tokentype, i;
+  int token_type, i;
   char token[1024];
 #ifdef DEBUG
   int t = 0;
@@ -1044,42 +1053,42 @@ int main_parser(FILE *in)
 
   while(1)
   {
-    tokentype = gettoken(in, token);
-    if (tokentype == -1) { break; }
+    token_type = tokens->get(token);
+    if (token_type == -1) { break; }
 
     if (strcmp(token, "set") == 0)
     {
-      i = parse_set(in);
+      i = parse_set(tokens);
       if (i == -1) { return -1; }
     }
       else
     if (strcmp(token, "define") == 0)
     {
-      i = parse_define(in);
+      i = parse_define(tokens);
       if (i == -1) { return -1; }
     }
       else
     if (strcmp(token, "include") == 0)
     {
-      i = parse_include(in);
+      i = parse_include(tokens);
       if (i == -1) { return -1; }
     }
       else
     if (strcmp(token, "pattern") == 0)
     {
-      i = parse_pattern(in);
+      i = parse_pattern(tokens);
       if (i == -1) { return -1; }
     }
       else
     if (strcmp(token, "section") == 0)
     {
-      i = parse_section(in);
+      i = parse_section(tokens);
       if (i == -1) { return -1; }
     }
       else
     if (strcmp(token, "song") == 0)
     {
-      i = parse_song(in);
+      i = parse_song(tokens);
       if (i == -1) { return -1; }
     }
       else

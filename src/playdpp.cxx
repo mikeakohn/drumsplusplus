@@ -40,8 +40,7 @@ unsigned char song_name[256];
 int midiout;
 char interactive;
 FILE *out;
-char *current_filename;
-
+const char *current_filename;
 
 #ifdef WINDOWS
 HMIDIOUT inHandle;
@@ -49,13 +48,14 @@ HMIDIOUT inHandle;
 
 int main(int argc, char *argv[])
 {
-  char infile[1024];
-  char outfile[1024];
+  Tokens tokens;
+  const char *infile;
+  const char *outfile;
   int t;
   FILE *in;
 
-  infile[0] = 0;
-  strcpy(outfile, "/dev/midi00");
+  outfile = "/dev/midi00";
+
   out = 0;
   interactive = 0;
 
@@ -79,12 +79,13 @@ int main(int argc, char *argv[])
       else
     if (strcmp(argv[t],"-midi") == 0)
     {
-      strcpy(outfile, argv[++t]);
+      outfile = argv[++t];
     }
       else
     if (strcmp(argv[t],"-o") == 0)
     {
-      strcpy(outfile, argv[++t]);
+      outfile = argv[++t];
+
       out = fopen(outfile,"wb");
 
       if (out == NULL)
@@ -101,13 +102,13 @@ int main(int argc, char *argv[])
     }
       else
     {
-      strcpy(infile, argv[t]);
+      infile = argv[t];
     }
   }
 
-  if (strcmp(infile,outfile) == 0)
+  if (strcmp(infile, outfile) == 0)
   {
-    printf("\nProblem:  The input and output filenames cannot be the same.\n\n");
+    printf("\nProblem:  The input / output filenames cannot be the same.\n\n");
     exit(1);
   }
 
@@ -115,9 +116,10 @@ int main(int argc, char *argv[])
   printf(COPYRIGHT);
   fflush(out);
 
-  in = fopen(infile, "rb");
+  //in = fopen(infile, "rb");
 
-  if (in == NULL)
+  //if (in == NULL)
+  if (tokens.open(infile) == 0)
   {
     printf("Error:  Couldn't open file %s\n", infile);
     exit(1);
@@ -125,7 +127,6 @@ int main(int argc, char *argv[])
 
   if (out == NULL)
   {
-
 #ifndef WINDOWS
     midiout = open(outfile, O_WRONLY, 0);
 
@@ -154,18 +155,19 @@ int main(int argc, char *argv[])
   song_info.midi_channel = 9;
 
   printf("Infile: %s\n\n", infile);
+
   defines[0] = 0;
   defines[1] = 0;
   pattern_names[0] = 0;
   pattern_names[1] = 0;
   section_names[0] = 0;
   section_names[1] = 0;
-  line=1;
+  line = 1;
   strcpy((char *)song_name,"undefined");
 
   current_filename = infile;
 
-  main_parser(in);
+  main_parser(&tokens);
 
 #ifdef DEBUG
 printf("BMP: %d\n", song_info.bpm);
@@ -175,7 +177,7 @@ printf("Timesignature: %d/%d\n", song_info.timesignature_beats, song_info.timesi
 printf("MIDI Channel: %d\n", song_info.midi_channel);
 #endif
 
-  fclose(in);
+  tokens.close();
 
   if (out == 0)
   {
