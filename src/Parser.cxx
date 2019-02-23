@@ -63,11 +63,11 @@ char *dirname_m(char *dir)
   return dir + i;
 }
 
-void error(const char *expect, char *got)
+void error(Tokens *tokens, const char *expect, char *got)
 {
-  printf(">> In file: %s\n", current_filename);
+  printf(">> In file: %s\n", tokens->get_filename());
   printf("Parse Error:  Expected '%s' and got '%s' on line %d.\n",
-    expect, got, line);
+    expect, got, tokens->get_line());
 }
 
 int parse_set(Tokens *tokens)
@@ -81,7 +81,7 @@ int parse_set(Tokens *tokens)
 
   if (token_type != 1)
   {
-    error("setting name", token);
+    error(tokens, "setting name", token);
     return -1;
   }
 
@@ -89,7 +89,7 @@ int parse_set(Tokens *tokens)
 
   if (strcmp(equals, "=") != 0)
   {
-    error("=", equals);
+    error(tokens, "=", equals);
     return -1;
   }
 
@@ -97,7 +97,7 @@ int parse_set(Tokens *tokens)
 
   if (token_type != 2)
   {
-    error("number",equals);
+    error(tokens, "number",equals);
     return -1;
   }
 
@@ -107,8 +107,9 @@ int parse_set(Tokens *tokens)
 
     if (song_info.bpm == 0)
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Tempo (bpm) must be non-zero; line %d\n", line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Tempo (bpm) must be non-zero; line %d\n",
+        tokens->get_line());
       return -1;
     }
 
@@ -121,7 +122,8 @@ int parse_set(Tokens *tokens)
 
     if (song_info.defaultvolume > 127)
     {
-      printf("Warning: defaultvolume is higher than the maximum 127; line %d\n", line);
+      printf("Warning: default volume is higher than the max 127; line %d\n",
+        tokens->get_line());
       song_info.defaultvolume = 127;
     }
   }
@@ -139,7 +141,7 @@ int parse_set(Tokens *tokens)
 
     if (strcmp(equals, "/") != 0)
     {
-      error("/", equals);
+      error(tokens, "/", equals);
       return -1;
     }
 
@@ -147,7 +149,7 @@ int parse_set(Tokens *tokens)
 
     if (token_type != 2)
     {
-      error("number", value);
+      error(tokens, "number", value);
       return -1;
     }
 
@@ -156,15 +158,17 @@ int parse_set(Tokens *tokens)
 
     if (song_info.timesignature_beats == 0)
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Timesignature numerator must be non-zero; line %d\n", line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Time signature numerator must be non-zero; line %d\n",
+        tokens->get_line());
       return -1;
     }
       else
     if (song_info.timesignature_base == 0)
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Timesignature denominator must be non-zero; line %d\n", line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Timesignature denominator must be non-zero; line %d\n",
+        tokens->get_line());
       return -1;
     }
   }
@@ -175,14 +179,15 @@ int parse_set(Tokens *tokens)
 
     if (song_info.midi_channel > 15)
     {
-      printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n", song_info.midi_channel, line);
+      printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n", song_info.midi_channel, tokens->get_line());
       song_info.midi_channel = 9;
     }
   }
     else
   {
-    printf(">> In file: %s\n", current_filename);
-    printf("Error: Unknown setting '%s' on line %d.\n", token, line);
+    printf(">> In file: %s\n", tokens->get_filename());
+    printf("Error: Unknown setting '%s' on line %d.\n",
+      token, tokens->get_line());
     return -1;
   }
 
@@ -190,7 +195,7 @@ int parse_set(Tokens *tokens)
 
   if (strcmp(equals, ";") != 0)
   {
-    error(";", equals);
+    error(tokens, ";", equals);
     return -1;
   }
 
@@ -207,7 +212,7 @@ int parse_define(Tokens *tokens)
 
   if (token_type != 1)
   {
-    error("define", token);
+    error(tokens, "define", token);
     return -1;
   }
 
@@ -224,8 +229,6 @@ int parse_include(Tokens *tokens)
   char token[1024];
   char filename[1024];
   char lastfilename[1024];
-  char *old_filename;
-  int old_line;
   Tokens *tokens_include;
 
   tokens_include = new Tokens();
@@ -234,7 +237,7 @@ int parse_include(Tokens *tokens)
 
   if (token_type != 4)
   {
-    error("filename", token);
+    error(tokens, "filename", token);
     return -1;
   }
 
@@ -242,7 +245,7 @@ int parse_include(Tokens *tokens)
 
   if (token[0] != '/')
   {
-    strcpy(lastfilename, current_filename);
+    strcpy(lastfilename, tokens->get_filename());
 
     if (dirname_m(lastfilename) != 0)
     {
@@ -250,12 +253,14 @@ int parse_include(Tokens *tokens)
       strcat(filename, "/");
     }
   }
+
   strcat(filename, token);
 
   if (tokens_include->open(filename) != 0)
   {
-    printf(">> In file: %s\n", current_filename);
-    printf("Error: included file not found: %s on line %d.\n",filename, line);
+    printf(">> In file: %s\n", tokens->get_filename());
+    printf("Error: included file not found: %s on line %d.\n",
+      filename, tokens->get_line());
 
     delete tokens_include;
 
@@ -263,15 +268,7 @@ int parse_include(Tokens *tokens)
   }
     else
   {
-    old_line = line;
-    line = 1;
-    old_filename = current_filename;
-    current_filename = filename;
-
     if (main_parser(tokens_include) == -1) { return -1; }
-
-    current_filename = old_filename;
-    line = old_line;
   }
 
   tokens_include->close();
@@ -304,7 +301,7 @@ int add_beats(
 
     if (token_type != 2)
     {
-      error("Channel number", token);
+      error(tokens, "Channel number", token);
       return -1;
     }
 
@@ -312,15 +309,16 @@ int add_beats(
 
     if (midi_channel > 15)
     {
-      printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n",midi_channel, line);
-      midi_channel=9;
+      printf("Warning: MIDI channel %d is higher than the max 15; line %d\n",
+        midi_channel, tokens->get_line());
+      midi_channel = 9;
     }
     token_type = tokens->get(token);
   }
 
   if (strcmp(token, ":") != 0)
   {
-    error(":", token);
+    error(tokens, ":", token);
     return -1;
   }
 
@@ -334,8 +332,9 @@ int add_beats(
     {
       if (c == 0)
       {
-        printf(">> In file: %s\n", current_filename);
-        printf("Parse Error: Unexpected token %s on line %d.\n", token, line);
+        printf(">> In file: %s\n", tokens->get_filename());
+        printf("Parse Error: Unexpected token %s on line %d.\n",
+          token, tokens->get_line());
         return -1;
       }
 
@@ -351,7 +350,7 @@ int add_beats(
 
       if (token_type != 2)
       {
-        error("volume integer", token);
+        error(tokens, "volume integer", token);
         return -1;
       }
 
@@ -359,7 +358,8 @@ int add_beats(
 
       if (m > 127)
       {
-        printf("Warning: Volume is higher than 127 on line %d.\n", line);
+        printf("Warning: Volume is higher than 127 on line %d.\n",
+          tokens->get_line());
       }
 
       m = m + modifier;
@@ -376,7 +376,7 @@ int add_beats(
 
     if (token_type != 2)
     {
-      error("a beat number", token);
+      error(tokens, "a beat number", token);
       continue;
     }
 
@@ -386,15 +386,17 @@ int add_beats(
 
     if (beat[*ptr] < 1)
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Beat is less than 1 on line %d.  Ignoring.\n", line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Beat is less than 1 on line %d.  Ignoring.\n",
+        tokens->get_line());
       beat[*ptr] = 0;
     }
 
     if (beat[*ptr] >= song_info.timesignature_beats + 1)
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Beat is more than beats per measure on line %d.  Ignoring.\n", line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Beat exceeds beats per measure on line %d.  Ignoring.\n",
+        tokens->get_line());
       beat[*ptr] = 0;
     }
 
@@ -430,8 +432,9 @@ int parse_pattern(Tokens *tokens)
 
   if (token_type != 1)
   {
-    printf(">> In file: %s\n", current_filename);
-    printf("Error: Pattern is not alphanumeric on line %d\n", line);
+    printf(">> In file: %s\n", tokens->get_filename());
+    printf("Error: Pattern is not alphanumeric on line %d\n",
+      tokens->get_line());
     return -1;
   }
 
@@ -445,7 +448,7 @@ printf("parsing pattern: %s\n", token);
 
   if (strcmp(token, "{") != 0)
   {
-    error("{", token);
+    error(tokens, "{", token);
     return -1;
   }
 
@@ -464,7 +467,7 @@ printf("parsing pattern: %s\n", token);
 
       if (token_type!=1)
       {
-        error("variable to set", token);
+        error(tokens, "variable to set", token);
         return -1;
       }
 
@@ -472,7 +475,7 @@ printf("parsing pattern: %s\n", token);
 
       if (strcmp(token1, "=") != 0)
       {
-        error("=", token1);
+        error(tokens, "=", token1);
         return -1;
       }
 
@@ -480,7 +483,7 @@ printf("parsing pattern: %s\n", token);
 
       if (token_type != 2)
       {
-        error("a number", token1);
+        error(tokens, "a number", token1);
         return -1;
       }
 
@@ -488,7 +491,7 @@ printf("parsing pattern: %s\n", token);
 
       if (i == 0)
       {
-        error("a non-zero integer", token1);
+        error(tokens, "a non-zero integer", token1);
         return -1;
       }
 
@@ -505,7 +508,7 @@ printf("parsing pattern: %s\n", token);
 
         if (strcmp(token1, "/") != 0)
         {
-          error("/", token1);
+          error(tokens, "/", token1);
           return -1;
         }
 
@@ -513,7 +516,7 @@ printf("parsing pattern: %s\n", token);
 
         if (token_type != 2)
         {
-          error("a number", token1);
+          error(tokens, "a number", token1);
           return -1;
         }
 
@@ -521,7 +524,7 @@ printf("parsing pattern: %s\n", token);
 
         if (i == 0)
         {
-          error("a non-zero integer", token1);
+          error(tokens, "a non-zero integer", token1);
           return -1;
         }
 
@@ -534,7 +537,8 @@ printf("parsing pattern: %s\n", token);
 
         if (midi_channel > 15)
         {
-          printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n",midi_channel, line);
+          printf("Warning: MIDI channel %d is higher than max 15; line %d\n",
+            midi_channel, tokens->get_line());
           midi_channel = 9;
         }
       }
@@ -547,7 +551,7 @@ printf("parsing pattern: %s\n", token);
 
       if (strcmp(token, ";") != 0)
       {
-        error(";", token);
+        error(tokens, ";", token);
         return -1;
       }
 
@@ -567,15 +571,17 @@ printf("parsing pattern: %s\n", token);
     {
       if (get_define(defines, token, value) == -1)
       {
-        printf(">> In file: %s\n", current_filename);
-        printf("Error: %s is undefined on line %d\n", token, line);
+        printf(">> In file: %s\n", tokens->get_filename());
+        printf("Error: %s is undefined on line %d\n",
+          token, tokens->get_line());
         return -1;
       }
 
       if (is_number(value) == 0)
       {
-        printf(">> In file: %s\n", current_filename);
-        printf("Error: %s is undefined is not defined as a number line %d\n", token, line);
+        printf(">> In file: %s\n", tokens->get_filename());
+        printf("Error: %s is not a number on line %d\n",
+          token, tokens->get_line());
         return -1;
       }
 
@@ -688,8 +694,9 @@ int parse_section(Tokens *tokens)
 
   if (token_type != 1)
   {
-    printf(">> In file: %s\n", current_filename);
-    printf("Error: Section is not alphanumeric on line %d\n", line);
+    printf(">> In file: %s\n", tokens->get_filename());
+    printf("Error: Section is not alphanumeric on line %d\n",
+      tokens->get_line());
     return -1;
   }
 
@@ -703,7 +710,7 @@ printf("parsing section: %s\n", token);
 
   if (strcmp(token, "{") != 0)
   {
-    error("{", token);
+    error(tokens, "{", token);
     return -1;
   }
 
@@ -722,7 +729,7 @@ printf("parsing section: %s\n", token);
 
       if (strcmp(token, ":") != 0)
       {
-        error(":", token);
+        error(tokens, ":", token);
         return -1;
       }
 
@@ -741,8 +748,9 @@ printf("parsing section: %s\n", token);
 
         if (i == -1)
         {
-          printf(">> In file: %s\n", current_filename);
-          printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n", token,line);
+          printf(">> In file: %s\n", tokens->get_filename());
+          printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
+            token, tokens->get_line());
         }
           else
         {
@@ -758,7 +766,7 @@ printf("parsing section: %s\n", token);
           else
         if (strcmp(token, ",") != 0)
         {
-          error(",", token);
+          error(tokens, ",", token);
           return -1;
         }
       }
@@ -943,15 +951,15 @@ printf("playing song\n");
 
       if (strcmp(token, "{") != 0)
       {
-        error("{", token);
+        error(tokens, "{", token);
         return -1;
       }
     }
       else
     {
-      printf(">> In file: %s\n", current_filename);
+      printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Expecting song name or '{' but got '%s' on line %d.\n",
-        token, line);
+        token, tokens->get_line());
       return -1;
     }
   }
@@ -977,7 +985,7 @@ printf("playing song\n");
 
       if (strcmp(token, ":") != 0)
       {
-        error(":", token);
+        error(tokens, ":", token);
         return -1;
       }
 
@@ -1004,8 +1012,9 @@ printf("playing song\n");
 
           if (i == -1)
           {
-            printf(">> In file: %s\n", current_filename);
-            printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n", token, line);
+            printf(">> In file: %s\n", tokens->get_filename());
+            printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
+              token, tokens->get_line());
           }
             else
           {
@@ -1022,7 +1031,7 @@ printf("playing song\n");
           else
         if (strcmp(token, ",") != 0)
         {
-          error(",", token);
+          error(tokens, ",", token);
           return -1;
         }
       }
@@ -1093,8 +1102,9 @@ int main_parser(Tokens *tokens)
     }
       else
     {
-      printf(">> In file: %s\n", current_filename);
-      printf("Error: Unknown token '%s' on line %d.\n", token, line);
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Unknown token '%s' on line %d.\n",
+        token, tokens->get_line());
       return -1;
     }
   }

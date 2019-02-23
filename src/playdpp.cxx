@@ -24,7 +24,6 @@
 
 // FIXME: OUCH
 char defines[MAX_LITERAL_SPACE];
-int line;
 struct song_info_t song_info;
 unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
@@ -40,7 +39,7 @@ unsigned char song_name[256];
 int midiout;
 char interactive;
 FILE *out;
-const char *current_filename;
+//const char *current_filename;
 
 #ifdef WINDOWS
 HMIDIOUT inHandle;
@@ -49,12 +48,9 @@ HMIDIOUT inHandle;
 int main(int argc, char *argv[])
 {
   Tokens tokens;
-  const char *infile;
-  const char *outfile;
+  const char *infile = "";
+  const char *outfile = "/dev/midi00";
   int t;
-  FILE *in;
-
-  outfile = "/dev/midi00";
 
   out = 0;
   interactive = 0;
@@ -106,9 +102,15 @@ int main(int argc, char *argv[])
     }
   }
 
+  if (infile[0] == 0)
+  {
+    printf("\nError: No input filename specified.\n\n");
+    exit(1);
+  }
+
   if (strcmp(infile, outfile) == 0)
   {
-    printf("\nProblem:  The input / output filenames cannot be the same.\n\n");
+    printf("\nError: The input / output filenames cannot be the same.\n\n");
     exit(1);
   }
 
@@ -116,9 +118,6 @@ int main(int argc, char *argv[])
   printf(COPYRIGHT);
   fflush(out);
 
-  //in = fopen(infile, "rb");
-
-  //if (in == NULL)
   if (tokens.open(infile) == 0)
   {
     printf("Error:  Couldn't open file %s\n", infile);
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
     if (midiout < 0)
     {
       printf("Error opening up sequencer.\n");
-      fclose(in);
+      tokens.close();
       exit(1);
     }
 #else
@@ -162,10 +161,9 @@ int main(int argc, char *argv[])
   pattern_names[1] = 0;
   section_names[0] = 0;
   section_names[1] = 0;
-  line = 1;
   strcpy((char *)song_name,"undefined");
 
-  current_filename = infile;
+  //current_filename = infile;
 
   main_parser(&tokens);
 

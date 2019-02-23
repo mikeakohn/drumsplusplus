@@ -29,7 +29,8 @@ Token Types:
 
 Tokens::Tokens() :
   in(NULL),
-  pushback(0)
+  pushback(0),
+  line(1)
 {
 }
 
@@ -45,6 +46,8 @@ int Tokens::open(const char *filename)
   {
     return -1;
   }
+
+  this->filename = filename;
 
   return 0;
 }
@@ -218,7 +221,7 @@ again:
 
   if (token_type == 4 && ch != '"')
   {
-    printf(">> In file: %s\n", current_filename);
+    printf(">> In file: %s\n", get_filename());
     printf("Error: Unterminated string on line %d.\n", line);
     return -1;
   }
