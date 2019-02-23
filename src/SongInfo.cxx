@@ -22,14 +22,16 @@ SongInfo::SongInfo() :
   time_signature_base(4),
   midi_channel(9)
 {
+  song_name = "undefined";
 }
 
 SongInfo::~SongInfo()
 {
 }
 
-void SongInfo::Print()
+void SongInfo::print()
 {
+  printf("     Song Name: %s\n", song_name.c_str());
   printf("           BMP: %d\n", bpm);
   printf("Default Volume: %d\n", default_volume);
   printf("         Drift: %d\n", drift);

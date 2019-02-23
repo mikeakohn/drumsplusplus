@@ -25,7 +25,8 @@
 
 #include "general.h"
 #include "Tokens.h"
-#include "Midi.h"
+#include "MidiFile.h"
+#include "MidiPlayer.h"
 #include "Note.h"
 #include "Song.h"
 #include "Utility.h"
@@ -114,7 +115,7 @@ int parse_set(Tokens *tokens)
       return -1;
     }
 
-    /* write_midi_bpm(out); */
+    /* midi_file->write_bpm(); */
   }
     else
   if (strcmp(token, "default_volume") == 0 ||
@@ -157,7 +158,7 @@ int parse_set(Tokens *tokens)
     }
 
     song_info.time_signature_base = atoi(value);
-    /* write_midi_timesignature(out); */
+    /* midi_file->write_time_signature(); */
 
     if (song_info.time_signature_beats == 0)
     {
@@ -226,7 +227,7 @@ int parse_define(Tokens *tokens)
   return 0;
 }
 
-int parse_include(Tokens *tokens)
+int parse_include(Tokens *tokens, MidiFile *midi_file)
 {
   int token_type;
   char token[1024];
@@ -271,7 +272,7 @@ int parse_include(Tokens *tokens)
   }
     else
   {
-    if (main_parser(tokens_include) == -1) { return -1; }
+    if (main_parser(tokens_include, midi_file) == -1) { return -1; }
   }
 
   tokens_include->close();
@@ -423,12 +424,13 @@ int parse_pattern(Tokens *tokens)
   float next_beat = 0;
   int i, count, num_notes;
   int beat_time;
-  int time_signature_beats, time_signature_base;
+  int time_signature_beats;
+  //int time_signature_base;
   int midi_channel;
 
   beat_time = 60000000 / song_info.bpm;
   time_signature_beats = song_info.time_signature_beats;
-  time_signature_base = song_info.time_signature_base;
+  //time_signature_base = song_info.time_signature_base;
   midi_channel = song_info.midi_channel;
 
   token_type = tokens->get(token);
@@ -531,7 +533,7 @@ printf("parsing pattern: %s\n", token);
           return -1;
         }
 
-        time_signature_base = i;
+        //time_signature_base = i;
       }
         else
       if (strcmp(token, "midi_channel") == 0)
@@ -781,15 +783,15 @@ printf("parsing section: %s\n", token);
   return 0;
 }
 
-void play_pattern(int i)
+void play_pattern(MidiFile *midi_file, int i)
 {
   int ptr;
-  unsigned char midi_data[256];
+  uint8_t midi_data[256];
   Note note;
-  int k;
-  unsigned int r;
+  uint32_t k;
+  uint32_t r;
 #ifdef WINDOWS
-  unsigned int n;
+  int n;
 #endif
 
   ptr = find_pattern(i);
@@ -798,7 +800,7 @@ void play_pattern(int i)
   {
     printf("Pattern: ");
     print_name((char *)pattern_names, i);
-    fflush(out);
+    fflush(stdout);
   }
 
 #ifdef DEBUG
@@ -816,7 +818,7 @@ printf("[ ");
 printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[ptr]);
 #endif
 
-    if (out == 0)
+    if (!midi_file->is_open())
     {
       midi_data[k++] = 0x90 + pattern_channel[ptr];
       midi_data[k++] = pattern[ptr];
@@ -824,18 +826,15 @@ printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[p
 
       if (pattern_duration[ptr] != 0)
       {
-#ifndef WINDOWS
-        if (pattern_volume[ptr] != 0) { write(midiout, midi_data, k); }
-#else
-        for (r = 0; r < k; r = r + 3)
+        // FIXME: Enable this later.
+        //midi_player->play(midi_data, k);
+
+        for (r = 0; r < k; r++)
         {
-          n = midi_data[r] + (midi_data[r + 1] << 8) + (midi_data[r + 2] << 16);
-          midiOutShortMsg(inHandle, n);
+          printf(" %02x\n", midi_data[r]);
         }
-#endif
 
 #ifdef DEBUG
-printf("k=%d\n", k);
 printf("usleep(%d) ", pattern_duration[ptr]);
 #endif
 
@@ -894,7 +893,8 @@ printf("%d %d\n",pattern_duration[ptr], r);
       note.volume = pattern_volume[ptr];
       note.duration = pattern_duration[ptr];
       note.midi_channel = pattern_channel[ptr];
-      write_midi_note(out, &note);
+
+      midi_file->write_note(&note);
     }
 
     ptr++;
@@ -903,10 +903,9 @@ printf("%d %d\n",pattern_duration[ptr], r);
 #ifdef DEBUG
 printf(" ]\n");
 #endif
-
 }
 
-void play_section(int i)
+void play_section(MidiFile *midi_file, int i)
 {
   int ptr;
 
@@ -925,12 +924,12 @@ printf("playing section: %d\n",i);
   while(1)
   {
     if (sections[ptr] == -1) { break; }
-    play_pattern(sections[ptr]);
+    play_pattern(midi_file, sections[ptr]);
     ptr++;
   }
 }
 
-int parse_song(Tokens *tokens)
+int parse_song(Tokens *tokens, MidiFile *midi_file)
 {
   int token_type;
   char token[1024];
@@ -967,11 +966,8 @@ printf("playing song\n");
     }
   }
 
-  if (out != 0)
-  {
-    write_midi_header(out);
-    write_midi_bpm(out);
-  }
+  midi_file->write_header(song_info.get_song_name());
+  midi_file->write_bpm();
 
   while(1)
   {
@@ -1007,7 +1003,7 @@ printf("playing song\n");
 
         if (i != -1)
         {
-          for (x = 0; x < repeat; x++) { play_section(i); }
+          for (x = 0; x < repeat; x++) { play_section(midi_file, i); }
         }
           else
         {
@@ -1021,7 +1017,7 @@ printf("playing song\n");
           }
             else
           {
-            for (x = 0; x < repeat; x++) { play_pattern(i); }
+            for (x = 0; x < repeat; x++) { play_pattern(midi_file, i); }
           }
         }
 
@@ -1041,15 +1037,12 @@ printf("playing song\n");
     }
   }
 
-  if (out != 0)
-  {
-    write_midi_footer(out);
-  }
+  midi_file->write_footer();
 
   return 0;
 }
 
-int main_parser(Tokens *tokens)
+int main_parser(Tokens *tokens, MidiFile *midi_file)
 {
   int token_type, i;
   char token[1024];
@@ -1066,6 +1059,7 @@ int main_parser(Tokens *tokens)
   while(1)
   {
     token_type = tokens->get(token);
+
     if (token_type == -1) { break; }
 
     if (strcmp(token, "set") == 0)
@@ -1082,7 +1076,7 @@ int main_parser(Tokens *tokens)
       else
     if (strcmp(token, "include") == 0)
     {
-      i = parse_include(tokens);
+      i = parse_include(tokens, midi_file);
       if (i == -1) { return -1; }
     }
       else
@@ -1100,7 +1094,7 @@ int main_parser(Tokens *tokens)
       else
     if (strcmp(token, "song") == 0)
     {
-      i = parse_song(tokens);
+      i = parse_song(tokens, midi_file);
       if (i == -1) { return -1; }
     }
       else
@@ -1112,13 +1106,22 @@ int main_parser(Tokens *tokens)
     }
   }
 
+#ifdef WINDOWS
+  Sleep(1000);
+#endif
+
+  return 0;
+}
+
+void print_song()
+{
 #ifdef DEBUG
-printf("Defines:\n");
-print_all(defines);
-printf("Patterns:\n");
-print_all(pattern_names);
-printf("Sections:\n");
-print_all(section_names);
+  printf("Defines:\n");
+  print_all(defines);
+  printf("Patterns:\n");
+  print_all(pattern_names);
+  printf("Sections:\n");
+  print_all(section_names);
 
   i = 0;
   t = 0;
@@ -1139,11 +1142,5 @@ print_all(section_names);
 
 printf("song_name=%s\n", song_name);
 #endif
-
-#ifdef WINDOWS
-  Sleep(1000);
-#endif
-
-  return 0;
 }
 

@@ -12,14 +12,18 @@
 #ifndef DPP_SONG_INFO_H
 #define DPP_SONG_INFO_H
 
+#include <string>
+
 class SongInfo
 {
 public:
   SongInfo();
   ~SongInfo();
 
-  void Print();
+  void print();
+  const char *get_song_name() { return song_name.c_str(); }
 
+  std::string song_name;
   int bpm;
   int default_volume;
   int drift;

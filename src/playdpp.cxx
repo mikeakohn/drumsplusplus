@@ -12,14 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#ifdef WINDOWS
-#include <windows.h>
-#include <mmsystem.h>
-#endif
 
 #include "general.h"
+#include "version.h"
+#include "MidiFile.h"
+#include "MidiPlayer.h"
 #include "Song.h"
 #include "SongInfo.h"
 
@@ -37,23 +34,20 @@ int sections_ptr;
 unsigned char pattern_names[MAX_LITERAL_SPACE];
 unsigned char section_names[MAX_LITERAL_SPACE];
 unsigned char song_name[256];
-int midiout;
+//int midiout;
 char interactive;
-FILE *out;
+//FILE *out;
 //const char *current_filename;
-
-#ifdef WINDOWS
-HMIDIOUT inHandle;
-#endif
 
 int main(int argc, char *argv[])
 {
   Tokens tokens;
+  MidiFile midi_file;
+  MidiPlayer midi_player;
   const char *infile = "";
   const char *outfile = "/dev/midi00";
   int t;
 
-  out = 0;
   interactive = 0;
 
   if (argc == 1)
@@ -83,11 +77,8 @@ int main(int argc, char *argv[])
     {
       outfile = argv[++t];
 
-      out = fopen(outfile,"wb");
-
-      if (out == NULL)
+      if (midi_file.open(outfile) != 0)
       {
-        printf("Couldn't open file %s for output.\n", outfile);
         exit(1);
       }
     }
@@ -117,7 +108,7 @@ int main(int argc, char *argv[])
 
   printf(DLPLAYER_INFO);
   printf(COPYRIGHT);
-  fflush(out);
+  fflush(stdout);
 
   if (tokens.open(infile) == 0)
   {
@@ -125,26 +116,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if (out == NULL)
+  if (!midi_file.is_open())
   {
-#ifndef WINDOWS
-    midiout = open(outfile, O_WRONLY, 0);
-
-    if (midiout < 0)
+    if (midi_player.open(outfile) != 0)
     {
-      printf("Error opening up sequencer.\n");
       tokens.close();
       exit(1);
     }
-#else
-    int result = midiOutOpen(&inHandle, (UINT) -1, 0, 0, CALLBACK_NULL);
-
-    if (result)
-    {
-      printf("Couldn't open MIDI device.\n");
-      exit(1);
-    }
-#endif
   }
 
   printf("Infile: %s\n\n", infile);
@@ -159,7 +137,7 @@ int main(int argc, char *argv[])
 
   //current_filename = infile;
 
-  main_parser(&tokens);
+  main_parser(&tokens, &midi_file);
 
 #ifdef DEBUG
 song.Print();
@@ -167,17 +145,13 @@ song.Print();
 
   tokens.close();
 
-  if (out == 0)
+  if (midi_file.is_open())
   {
-#ifndef WINDOWS
-    close(midiout);
-#else
-    midiOutClose(inHandle);
-#endif
+    midi_file.close();
   }
     else
   {
-    fclose(out);
+    midi_player.close();
   }
 
   return 0;

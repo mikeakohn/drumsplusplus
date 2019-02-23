@@ -5,7 +5,8 @@ CPP=g++
 CFLAGS=-Wall $(DEBUG) -O3
 OBJECTS= \
   Tokens.o \
-  Midi.o \
+  MidiFile.o \
+  MidiPlayer.o \
   Song.o \
   SongInfo.o \
   Utility.o

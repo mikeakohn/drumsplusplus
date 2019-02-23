@@ -14,8 +14,6 @@
 
 #include "SongInfo.h"
 
-#define DLPLAYER_INFO "\nDrums++ Player Version 0.97 - Feburary 22, 2019\n"
-#define COPYRIGHT "Copyright 2003-2019 Michael Kohn\n\n"
 #define MAX_LITERAL_SPACE 16738
 #define PATTERN_HEAP_SIZE 16738
 #define SECTIONS_HEAP_SIZE 16738
@@ -36,9 +34,9 @@ extern int sections_ptr;
 extern unsigned char pattern_names[MAX_LITERAL_SPACE];
 extern unsigned char section_names[MAX_LITERAL_SPACE];
 extern unsigned char song_name[256];
-extern int midiout;
+//extern int midiout;
 extern char interactive;
-extern FILE *out;
+//extern FILE *out;
 //extern const char *current_filename;
 
 #endif
