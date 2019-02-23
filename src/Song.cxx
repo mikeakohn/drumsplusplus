@@ -67,14 +67,12 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
       else
     if (strcmp(token, "define") == 0)
     {
-      i = parse_define(tokens);
-      if (i == -1) { return -1; }
+      if (parse_define(tokens) == -1) { return -1; }
     }
       else
     if (strcmp(token, "include") == 0)
     {
-      i = parse_include(tokens, midi_file);
-      if (i == -1) { return -1; }
+      if (parse_include(tokens, midi_file) == -1) { return -1; }
     }
       else
     if (strcmp(token, "pattern") == 0)
@@ -85,8 +83,7 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
       else
     if (strcmp(token, "section") == 0)
     {
-      i = parse_section(tokens);
-      if (i == -1) { return -1; }
+      if (parse_section(tokens) == -1) { return -1; }
     }
       else
     if (strcmp(token, "song") == 0)
@@ -113,7 +110,12 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
 void Song::print_song()
 {
   printf("Defines:\n");
-  print_all(defines);
+
+  for (auto it = defines.begin(); it != defines.end(); it++)
+  {
+    printf("  %s = %s\n", it->first.c_str(), it->second.c_str());
+  }
+
   printf("Patterns:\n");
   print_all(pattern_names);
   printf("Sections:\n");
@@ -262,20 +264,25 @@ int Song::parse_set(Tokens *tokens)
 int Song::parse_define(Tokens *tokens)
 {
   int token_type;
-  char token[1024];
+  char name[1024];
   char value[1024];
 
-  token_type = tokens->get(token);
+  token_type = tokens->get(name);
 
   if (token_type != TOKEN_ALPHA)
   {
-    print_error(tokens, "define", token);
+    print_error(tokens, "define", name);
     return -1;
   }
 
   token_type = tokens->get(value);
 
-  insert_define(defines, token, value);
+  if (defines.find(name) != defines.end())
+  {
+    print_error(tokens, "already defined", name);
+  }
+
+  defines[name] = value;
 
   return 0;
 }
@@ -627,13 +634,15 @@ printf("parsing pattern: %s\n", token);
     }
       else
     {
-      if (get_define(defines, token, value) == -1)
+      if (defines.find(token) == defines.end())
       {
         printf(">> In file: %s\n", tokens->get_filename());
         printf("Error: %s is undefined on line %d\n",
           token, tokens->get_line());
         return -1;
       }
+
+      strcpy(value, defines[token].c_str());
 
       if (is_number(value) == 0)
       {

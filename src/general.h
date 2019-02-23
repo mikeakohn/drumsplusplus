@@ -20,7 +20,6 @@
 #define MAX_SONG_SIZE 2048
 
 // FIXME - OUCH
-extern char defines[MAX_LITERAL_SPACE];
 extern unsigned char pattern[PATTERN_HEAP_SIZE];
 extern unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 extern unsigned char pattern_volume[PATTERN_HEAP_SIZE];

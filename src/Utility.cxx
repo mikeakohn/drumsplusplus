@@ -16,33 +16,6 @@
 #include "general.h"
 #include "Utility.h"
 
-int insert_define(char *buffer, char *token, char *value)
-{
-  int p;
-
-  p = 0;
-
-  while (buffer[p] != 0)
-  {
-    while (buffer[p] != 0) { p++; }
-
-    p++;
-  }
-
-  if (p + strlen(token) + strlen(value) + 3 >= MAX_LITERAL_SPACE)
-  {
-    return -1;
-  }
-
-  strcpy(buffer + p,token);
-  p = p + strlen(token) + 1;
-  strcpy(buffer + p, value);
-  p = p + strlen(value) + 1;
-  buffer[p] = 0;
-
-  return 0;
-}
-
 int insert_literal(char *buffer, char *token)
 {
   int p;
@@ -99,36 +72,6 @@ void print_name(char *buffer, int i)
     p++;
     k++;
   }
-}
-
-int get_define(char *buffer, char *token, char *value)
-{
-  int p, i;
-
-  p = 0;
-  i = 0;
-
-  while (buffer[p] != 0)
-  {
-    if ((i % 2) == 0 && strcmp(&buffer[p], token) == 0)
-    {
-#ifdef DEBUG
-printf("%s\n", &buffer[p]);
-#endif
-      while (buffer[p] != 0) { p++; }
-      p++;
-
-      strcpy(value, &buffer[p]);
-      return 0;
-    }
-
-    while (buffer[p] != 0) { p++; }
-    p++;
-
-    i++;
-  }
-
-  return -1;
 }
 
 int get_literal(char *buffer, char *token)

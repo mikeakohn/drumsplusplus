@@ -21,7 +21,6 @@
 #include "SongInfo.h"
 
 // FIXME: OUCH
-char defines[MAX_LITERAL_SPACE];
 unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
@@ -119,8 +118,6 @@ int main(int argc, char *argv[])
 
   printf("Infile: %s\n\n", infile);
 
-  defines[0] = 0;
-  defines[1] = 0;
   pattern_names[0] = 0;
   pattern_names[1] = 0;
 

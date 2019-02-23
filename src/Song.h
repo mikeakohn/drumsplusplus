@@ -53,6 +53,7 @@ private:
 
   SongInfo song_info;
   std::map<std::string, Section> sections;
+  std::map<std::string, std::string> defines;
 #ifndef WINDOWS
   struct itimerval play_timer;
 #else
