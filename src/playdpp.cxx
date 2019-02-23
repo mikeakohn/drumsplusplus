@@ -26,12 +26,9 @@ unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
 unsigned char pattern_channel[PATTERN_HEAP_SIZE];
-int sections[SECTIONS_HEAP_SIZE];
 int song[MAX_SONG_SIZE];
 int patterns_ptr;
-int sections_ptr;
 char pattern_names[MAX_LITERAL_SPACE];
-char section_names[MAX_LITERAL_SPACE];
 
 int main(int argc, char *argv[])
 {
@@ -126,8 +123,6 @@ int main(int argc, char *argv[])
   defines[1] = 0;
   pattern_names[0] = 0;
   pattern_names[1] = 0;
-  section_names[0] = 0;
-  section_names[1] = 0;
 
   //current_filename = infile;
 

@@ -8,6 +8,7 @@ OBJECTS= \
   MidiFile.o \
   MidiPlayer.o \
   Pattern.o \
+  Section.o \
   Song.o \
   SongInfo.o \
   Utility.o

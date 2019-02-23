@@ -170,22 +170,6 @@ int is_number(char *s)
   return 1;
 }
 
-int find_section(int i)
-{
-  int t, ptr;
-
-  t = 0;
-  ptr = 0;
-
-  while (1)
-  {
-    if (i == t) { break; }
-    if (sections[ptr++] == -1) { t++; }
-  }
-
-  return ptr;
-}
-
 int find_pattern(int i)
 {
   int t, ptr;

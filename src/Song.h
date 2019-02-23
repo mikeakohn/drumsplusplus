@@ -13,8 +13,10 @@
 #define DPP_PARSER_H
 
 #include <sys/time.h>
+#include <map>
 
 #include "MidiFile.h"
+#include "Section.h"
 #include "Tokens.h"
 
 class Song
@@ -43,13 +45,14 @@ private:
   int parse_section(Tokens *tokens);
   int parse_pattern(Tokens *tokens);
   int parse_song(Tokens *tokens, MidiFile *midi_file);
-  void play_section(MidiFile *midi_file, int i);
+  int play_section(MidiFile *midi_file, std::string &section_name);
   void play_pattern(MidiFile *midi_file, int i);
   char *dirname_m(char *dir);
   void print_error(Tokens *tokens, const char *expect, const char *got);
   static void signal_catch(int sig);
 
   SongInfo song_info;
+  std::map<std::string, Section> sections;
 #ifndef WINDOWS
   struct itimerval play_timer;
 #else

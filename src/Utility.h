@@ -19,7 +19,6 @@ int get_define(char *buffer, char *token, char *value);
 int get_literal(char *buffer, char *token);
 int is_number(char *myString);
 int search_end_buffer(int *buffer);
-int find_section(int i);
 int find_pattern(int i);
 void print_name(char *buffer, int i);
 

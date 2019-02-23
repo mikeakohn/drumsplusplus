@@ -112,30 +112,16 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
 
 void Song::print_song()
 {
-  int i, t;
-
   printf("Defines:\n");
   print_all(defines);
   printf("Patterns:\n");
   print_all(pattern_names);
   printf("Sections:\n");
-  print_all(section_names);
 
-  i = 0;
-  t = 0;
-
-  while(1)
+  for (auto it = sections.begin(); it != sections.end(); it++)
   {
-    if (i == sections_ptr) { break; }
-
-    if (sections[i++] == -1)
-    {
-      printf("\n");
-      t++;
-      continue;
-    }
-
-    printf("%d ", sections[i - 1]);
+    printf("  name: %s\n", it->first.c_str());
+    it->second.print();
   }
 
   printf("song_name=%s\n", song_info.get_song_name());
@@ -757,10 +743,11 @@ printf("%f %f %d %d\n",low_beat,next_beat,pattern_duration[patterns_ptr],pattern
 
 int Song::parse_section(Tokens *tokens)
 {
+  std::string section_name;
+  Section section;
   int token_type;
   char token[1024];
-  int i,x;
-  int repeat;
+  int repeat, i;
 
   token_type = tokens->get(token);
 
@@ -776,7 +763,7 @@ int Song::parse_section(Tokens *tokens)
 printf("parsing section: %s\n", token);
 #endif
 
-  insert_literal((char *)section_names, token);
+  section_name = token;
 
   token_type = tokens->get(token);
 
@@ -826,7 +813,7 @@ printf("parsing section: %s\n", token);
         }
           else
         {
-          for (x = 0; x < repeat; x++) { sections[sections_ptr++] = i; }
+          section.add_pattern(i, repeat);
         }
 
         token_type = tokens->get(token);
@@ -845,7 +832,7 @@ printf("parsing section: %s\n", token);
     }
   }
 
-  sections[sections_ptr++] = -1;
+  sections[section_name] = section;
 
   return 0;
 }
@@ -922,11 +909,14 @@ printf("playing song\n");
           token_type = tokens->get(token);
         }
 
-        i = get_literal((char *)section_names, token);
+        std::string section_name = token;
 
-        if (i != -1)
+        if (sections.find(section_name) != sections.end())
         {
-          for (x = 0; x < repeat; x++) { play_section(midi_file, i); }
+          for (x = 0; x < repeat; x++)
+          {
+            play_section(midi_file, section_name);
+          }
         }
           else
         {
@@ -965,28 +955,36 @@ printf("playing song\n");
   return 0;
 }
 
-void Song::play_section(MidiFile *midi_file, int i)
+int Song::play_section(MidiFile *midi_file, std::string &section_name)
 {
   int ptr;
 
-  ptr = find_section(i);
+  if (sections.find(section_name) == sections.end())
+  {
+    printf("Could not find section %s\n", section_name.c_str());
+    return -1;
+  }
+
+  Section &section = sections[section_name];
 
   if (interactive == 1)
   {
-    printf("Section: ");
-    print_name((char *)section_names, i);
+    printf("Section: %s\n", section_name.c_str());
   }
 
 #ifdef DEBUG
-printf("playing section: %d\n",i);
+printf("playing section: %s\n", section_name.c_str());
 #endif
 
-  while(1)
+  std::vector<int> &patterns = section.get_patterns();
+
+  for (auto it = patterns.begin(); it != patterns.end(); it++)
   {
-    if (sections[ptr] == -1) { break; }
-    play_pattern(midi_file, sections[ptr]);
+    play_pattern(midi_file, *it);
     ptr++;
   }
+
+  return 0;
 }
 
 void Song::play_pattern(MidiFile *midi_file, int i)
