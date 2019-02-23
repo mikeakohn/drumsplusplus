@@ -12,8 +12,10 @@
 #ifndef DPP_MIDI_H
 #define DPP_MIDI_H
 
+#include "Note.h"
+
 void write_midi_header(FILE *out);
-void write_midi_note(FILE *out, struct note_t *note);
+void write_midi_note(FILE *out, Note *note);
 void write_midi_footer(FILE *out);
 void write_midi_bpm(FILE *out);
 void write_midi_timesignature(FILE *out);

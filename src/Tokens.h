@@ -14,6 +14,14 @@
 
 #include <string>
 
+enum
+{
+  TOKEN_ALPHA = 1,
+  TOKEN_NUMBER = 2,
+  TOKEN_SYMBOL = 3,
+  TOKEN_STRING = 4,
+};
+
 class Tokens
 {
 public:

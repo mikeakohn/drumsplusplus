@@ -20,11 +20,12 @@
 #endif
 
 #include "general.h"
-#include "Parser.h"
+#include "Song.h"
+#include "SongInfo.h"
 
 // FIXME: OUCH
 char defines[MAX_LITERAL_SPACE];
-struct song_info_t song_info;
+struct SongInfo song_info;
 unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
@@ -146,13 +147,6 @@ int main(int argc, char *argv[])
 #endif
   }
 
-  song_info.bpm = 120;
-  song_info.defaultvolume = 127;
-  song_info.drift = 5;
-  song_info.timesignature_beats = 4;
-  song_info.timesignature_base = 4;
-  song_info.midi_channel = 9;
-
   printf("Infile: %s\n\n", infile);
 
   defines[0] = 0;
@@ -168,11 +162,7 @@ int main(int argc, char *argv[])
   main_parser(&tokens);
 
 #ifdef DEBUG
-printf("BMP: %d\n", song_info.bpm);
-printf("Default Volume: %d\n", song_info.defaultvolume);
-printf("Drift: %d\n", song_info.drift);
-printf("Timesignature: %d/%d\n", song_info.timesignature_beats, song_info.timesignature_base);
-printf("MIDI Channel: %d\n", song_info.midi_channel);
+song.Print();
 #endif
 
   tokens.close();

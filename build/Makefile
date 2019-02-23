@@ -6,7 +6,8 @@ CFLAGS=-Wall $(DEBUG) -O3
 OBJECTS= \
   Tokens.o \
   Midi.o \
-  Parser.o \
+  Song.o \
+  SongInfo.o \
   Utility.o
 
 default: $(OBJECTS)

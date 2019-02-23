@@ -143,7 +143,7 @@ again:
         {
           pushback = ch;
           token[ptr++] = '/';
-          token_type = 3;
+          token_type = TOKEN_SYMBOL;
           break;
         }
       }
@@ -151,36 +151,35 @@ again:
       if (ch >= 'a' && ch <= 'z')
       {
         token[ptr++] = ch;
-        token_type = 1;
+        token_type = TOKEN_ALPHA;
       }
         else
       if (ch >= '0' && ch <= '9')
       {
         token[ptr++] = ch;
-        token_type = 2;
+        token_type = TOKEN_NUMBER;
       }
         else
       if (ch == '.')
       {
         token[ptr++] = '0';
         token[ptr++] = ch;
-        token_type = 2;
+        token_type = TOKEN_NUMBER;
       }
         else
       if (ch == '"')
       {
-        /* token[ptr++] = ch; */
-        token_type = 4;
+        token_type = TOKEN_STRING;
       }
         else
       {
         token[ptr++] = ch;
-        token_type = 3;
+        token_type = TOKEN_SYMBOL;
         break;
       }
     }
       else
-    if (token_type == 1)
+    if (token_type == TOKEN_ALPHA)
     {
       if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_')
       {
@@ -193,7 +192,7 @@ again:
       }
     }
       else
-    if (token_type == 2)
+    if (token_type == TOKEN_NUMBER)
     {
       if (ch >= '0' && ch <= '9')
       {
@@ -212,14 +211,14 @@ again:
       }
     }
       else
-    if (token_type == 4)
+    if (token_type == TOKEN_STRING)
     {
       if (ch == '"') { break; }
       token[ptr++] = ch;
     }
   }
 
-  if (token_type == 4 && ch != '"')
+  if (token_type == TOKEN_STRING && ch != '"')
   {
     printf(">> In file: %s\n", get_filename());
     printf("Error: Unterminated string on line %d.\n", line);

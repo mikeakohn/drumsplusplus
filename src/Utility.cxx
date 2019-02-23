@@ -154,14 +154,14 @@ int get_literal(char *buffer, char *token)
   return -1;
 }
 
-int is_number(char *myString)
+int is_number(char *s)
 {
   int r = 0;
 
-  while ((myString[r] != ' ' && myString[r] != '\t') &&
-        ((myString[r] != '\n' && myString[r] != '\r') && myString[r] != 0))
+  while ((s[r] != ' '  && s[r] != '\t') &&
+        ((s[r] != '\n' && s[r] != '\r') && s[r] != 0))
   {
-    if (myString[r] < '0' || myString[r] > '9') { return 0; }
+    if (s[r] < '0' || s[r] > '9') { return 0; }
     r++;
   }
 

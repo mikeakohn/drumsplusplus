@@ -15,6 +15,7 @@
 
 #include "general.h"
 #include "Midi.h"
+#include "Note.h"
 
 #define DIVISIONS 240
 
@@ -96,7 +97,7 @@ void write_midi_header(FILE *out)
   /* write_midi_bpm(out); */
 }
 
-void write_midi_note(FILE *out, struct note_t *note)
+void write_midi_note(FILE *out, Note *note)
 {
   int d;
 
@@ -151,7 +152,7 @@ void write_midi_timesignature(FILE *out)
 {
   int d;
 
-  d = song_info.timesignature_base;
+  d = song_info.time_signature_base;
 
   if (d == 32) { d = 5; }
     else
@@ -172,7 +173,7 @@ void write_midi_timesignature(FILE *out)
   putc(0x58, out);
   putc(0x04, out);
 
-  putc(song_info.timesignature_beats, out);
+  putc(song_info.time_signature_beats, out);
   putc(d, out);
 
   if (d == 3)

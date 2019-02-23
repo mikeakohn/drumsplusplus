@@ -1,0 +1,26 @@
+/**
+ *  Drums++
+ *  Author: Michael Kohn
+ *   Email: mike@mikekohn.net
+ *     Web: http://www.mikekohn.net/
+ * License: GPLv3
+ *
+ * Copyright 2001-2019 by Michael Kohn
+ *
+ */
+
+#ifndef DPP_NOTE_H
+#define DPP_NOTE_H
+
+#include <stdint.h>
+
+struct Note
+{
+  uint8_t instrument;
+  uint32_t volume;
+  int duration;
+  int midi_channel;
+};
+
+#endif
+

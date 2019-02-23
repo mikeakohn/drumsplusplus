@@ -26,7 +26,8 @@
 #include "general.h"
 #include "Tokens.h"
 #include "Midi.h"
-#include "Parser.h"
+#include "Note.h"
+#include "Song.h"
 #include "Utility.h"
 
 #ifndef WINDOWS
@@ -116,15 +117,16 @@ int parse_set(Tokens *tokens)
     /* write_midi_bpm(out); */
   }
     else
-  if (strcmp(token, "defaultvolume") == 0)
+  if (strcmp(token, "default_volume") == 0 ||
+      strcmp(token, "defaultvolume") == 0)
   {
-    song_info.defaultvolume = atoi(value);
+    song_info.default_volume = atoi(value);
 
-    if (song_info.defaultvolume > 127)
+    if (song_info.default_volume > 127)
     {
       printf("Warning: default volume is higher than the max 127; line %d\n",
         tokens->get_line());
-      song_info.defaultvolume = 127;
+      song_info.default_volume = 127;
     }
   }
     else
@@ -133,9 +135,10 @@ int parse_set(Tokens *tokens)
      song_info.drift = atoi(value);
   }
     else
-  if (strcmp(token, "timesignature") == 0)
+  if (strcmp(token, "time_signature") == 0 ||
+      strcmp(token, "timesignature") == 0)
   {
-    song_info.timesignature_beats = atoi(value);
+    song_info.time_signature_beats = atoi(value);
 
     token_type = tokens->get(equals);
 
@@ -153,10 +156,10 @@ int parse_set(Tokens *tokens)
       return -1;
     }
 
-    song_info.timesignature_base = atoi(value);
+    song_info.time_signature_base = atoi(value);
     /* write_midi_timesignature(out); */
 
-    if (song_info.timesignature_beats == 0)
+    if (song_info.time_signature_beats == 0)
     {
       printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Time signature numerator must be non-zero; line %d\n",
@@ -164,7 +167,7 @@ int parse_set(Tokens *tokens)
       return -1;
     }
       else
-    if (song_info.timesignature_base == 0)
+    if (song_info.time_signature_base == 0)
     {
       printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Timesignature denominator must be non-zero; line %d\n",
@@ -392,7 +395,7 @@ int add_beats(
       beat[*ptr] = 0;
     }
 
-    if (beat[*ptr] >= song_info.timesignature_beats + 1)
+    if (beat[*ptr] >= song_info.time_signature_beats + 1)
     {
       printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Beat exceeds beats per measure on line %d.  Ignoring.\n",
@@ -400,7 +403,7 @@ int add_beats(
       beat[*ptr] = 0;
     }
 
-    volume[*ptr] = song_info.defaultvolume;
+    volume[*ptr] = song_info.default_volume;
     (*ptr)++;
     c++;
   }
@@ -420,12 +423,12 @@ int parse_pattern(Tokens *tokens)
   float next_beat = 0;
   int i, count, num_notes;
   int beat_time;
-  int timesignature_beats, timesignature_base;
+  int time_signature_beats, time_signature_base;
   int midi_channel;
 
   beat_time = 60000000 / song_info.bpm;
-  timesignature_beats = song_info.timesignature_beats;
-  timesignature_base = song_info.timesignature_base;
+  time_signature_beats = song_info.time_signature_beats;
+  time_signature_base = song_info.time_signature_base;
   midi_channel = song_info.midi_channel;
 
   token_type = tokens->get(token);
@@ -502,7 +505,7 @@ printf("parsing pattern: %s\n", token);
         else
       if (strcmp(token, "timesignature") == 0)
       {
-        timesignature_beats = i;
+        time_signature_beats = i;
 
         token_type = tokens->get(token1);
 
@@ -528,7 +531,7 @@ printf("parsing pattern: %s\n", token);
           return -1;
         }
 
-        timesignature_base = i;
+        time_signature_base = i;
       }
         else
       if (strcmp(token, "midi_channel") == 0)
@@ -593,8 +596,8 @@ printf("parsing pattern: %s\n", token);
 
   while(1)
   {
-    low_beat = timesignature_beats + 1;
-    next_beat = timesignature_beats + 1;
+    low_beat = time_signature_beats + 1;
+    next_beat = time_signature_beats + 1;
     count = 0;
 
     for (i = 0; i < ptr; i++)
@@ -616,7 +619,7 @@ printf("parsing pattern: %s\n", token);
       if (ptr == 0)
       {
         pattern[patterns_ptr] = 0;
-        pattern_duration[patterns_ptr] = (int)((timesignature_beats)*beat_time);
+        pattern_duration[patterns_ptr] = (int)((time_signature_beats)*beat_time);
         pattern_volume[patterns_ptr] = 0;
         pattern_channel[patterns_ptr] = midi_channel;
         patterns_ptr++;
@@ -782,7 +785,7 @@ void play_pattern(int i)
 {
   int ptr;
   unsigned char midi_data[256];
-  struct note_t note;
+  Note note;
   int k;
   unsigned int r;
 #ifdef WINDOWS
