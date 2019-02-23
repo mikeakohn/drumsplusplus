@@ -68,7 +68,7 @@ int insert_literal(char *buffer, char *token)
   return 0;
 }
 
-void print_all(char *buffer)
+void print_all(const char *buffer)
 {
   int p;
 

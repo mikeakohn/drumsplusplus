@@ -31,48 +31,117 @@
 #include "Song.h"
 #include "Utility.h"
 
-#ifndef WINDOWS
-
-struct itimerval mr_timer;
-
-void signal_catch(int sig)
+Song::Song()
 {
-  signal(SIGPROF, signal_catch);
 }
-#else
 
-HMIDIOUT inHandle;
-DWORD mr_timer = 0;
+Song::~Song()
+{
+}
 
+int Song::parse(Tokens *tokens, MidiFile *midi_file)
+{
+  int token_type, i;
+  char token[1024];
+#ifdef DEBUG
+  int t = 0;
 #endif
 
-char *dirname_m(char *dir)
-{
-  int i;
+#ifndef WINDOWS
+  signal_catch(0);
+  play_timer.it_value.tv_sec = 0;
+  play_timer.it_value.tv_usec = 0;
+#endif
 
-  i = strlen(dir);
-
-  while (i >= 0)
+  while(1)
   {
-    if (dir[i] == '/' || dir[i] == '\\') { break; }
-    i--;
+    token_type = tokens->get(token);
+
+    if (token_type == -1) { break; }
+
+    if (strcmp(token, "set") == 0)
+    {
+      i = parse_set(tokens);
+      if (i == -1) { return -1; }
+    }
+      else
+    if (strcmp(token, "define") == 0)
+    {
+      i = parse_define(tokens);
+      if (i == -1) { return -1; }
+    }
+      else
+    if (strcmp(token, "include") == 0)
+    {
+      i = parse_include(tokens, midi_file);
+      if (i == -1) { return -1; }
+    }
+      else
+    if (strcmp(token, "pattern") == 0)
+    {
+      i = parse_pattern(tokens);
+      if (i == -1) { return -1; }
+    }
+      else
+    if (strcmp(token, "section") == 0)
+    {
+      i = parse_section(tokens);
+      if (i == -1) { return -1; }
+    }
+      else
+    if (strcmp(token, "song") == 0)
+    {
+      i = parse_song(tokens, midi_file);
+      if (i == -1) { return -1; }
+    }
+      else
+    {
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Unknown token '%s' on line %d.\n",
+        token, tokens->get_line());
+      return -1;
+    }
   }
 
-  if (i < 0) { return NULL; }
+#ifdef WINDOWS
+  Sleep(1000);
+#endif
 
-  dir[i] = 0;
-
-  return dir + i;
+  return 0;
 }
 
-void error(Tokens *tokens, const char *expect, char *got)
+void Song::print_song()
 {
-  printf(">> In file: %s\n", tokens->get_filename());
-  printf("Parse Error:  Expected '%s' and got '%s' on line %d.\n",
-    expect, got, tokens->get_line());
+  int i, t;
+
+  printf("Defines:\n");
+  print_all(defines);
+  printf("Patterns:\n");
+  print_all(pattern_names);
+  printf("Sections:\n");
+  print_all(section_names);
+
+  i = 0;
+  t = 0;
+
+  while(1)
+  {
+    if (i == sections_ptr) { break; }
+
+    if (sections[i++] == -1)
+    {
+      printf("\n");
+      t++;
+      continue;
+    }
+
+    printf("%d ", sections[i - 1]);
+  }
+
+  printf("song_name=%s\n", song_info.get_song_name());
 }
 
-int parse_set(Tokens *tokens)
+int Song::parse_set(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -83,7 +152,7 @@ int parse_set(Tokens *tokens)
 
   if (token_type != 1)
   {
-    error(tokens, "setting name", token);
+    print_error(tokens, "setting name", token);
     return -1;
   }
 
@@ -91,7 +160,7 @@ int parse_set(Tokens *tokens)
 
   if (strcmp(equals, "=") != 0)
   {
-    error(tokens, "=", equals);
+    print_error(tokens, "=", equals);
     return -1;
   }
 
@@ -99,7 +168,7 @@ int parse_set(Tokens *tokens)
 
   if (token_type != 2)
   {
-    error(tokens, "number",equals);
+    print_error(tokens, "number",equals);
     return -1;
   }
 
@@ -114,8 +183,6 @@ int parse_set(Tokens *tokens)
         tokens->get_line());
       return -1;
     }
-
-    /* midi_file->write_bpm(); */
   }
     else
   if (strcmp(token, "default_volume") == 0 ||
@@ -145,7 +212,7 @@ int parse_set(Tokens *tokens)
 
     if (strcmp(equals, "/") != 0)
     {
-      error(tokens, "/", equals);
+      print_error(tokens, "/", equals);
       return -1;
     }
 
@@ -153,7 +220,7 @@ int parse_set(Tokens *tokens)
 
     if (token_type != 2)
     {
-      error(tokens, "number", value);
+      print_error(tokens, "number", value);
       return -1;
     }
 
@@ -199,14 +266,14 @@ int parse_set(Tokens *tokens)
 
   if (strcmp(equals, ";") != 0)
   {
-    error(tokens, ";", equals);
+    print_error(tokens, ";", equals);
     return -1;
   }
 
   return 0;
 }
 
-int parse_define(Tokens *tokens)
+int Song::parse_define(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -216,7 +283,7 @@ int parse_define(Tokens *tokens)
 
   if (token_type != 1)
   {
-    error(tokens, "define", token);
+    print_error(tokens, "define", token);
     return -1;
   }
 
@@ -227,7 +294,7 @@ int parse_define(Tokens *tokens)
   return 0;
 }
 
-int parse_include(Tokens *tokens, MidiFile *midi_file)
+int Song::parse_include(Tokens *tokens, MidiFile *midi_file)
 {
   int token_type;
   char token[1024];
@@ -241,7 +308,7 @@ int parse_include(Tokens *tokens, MidiFile *midi_file)
 
   if (token_type != 4)
   {
-    error(tokens, "filename", token);
+    print_error(tokens, "filename", token);
     return -1;
   }
 
@@ -272,7 +339,7 @@ int parse_include(Tokens *tokens, MidiFile *midi_file)
   }
     else
   {
-    if (main_parser(tokens_include, midi_file) == -1) { return -1; }
+    if (parse(tokens_include, midi_file) == -1) { return -1; }
   }
 
   tokens_include->close();
@@ -281,7 +348,7 @@ int parse_include(Tokens *tokens, MidiFile *midi_file)
   return 0;
 }
 
-int add_beats(
+int Song::add_beats(
   Tokens *tokens,
   int *instrument,
   float *beat,
@@ -305,7 +372,7 @@ int add_beats(
 
     if (token_type != 2)
     {
-      error(tokens, "Channel number", token);
+      print_error(tokens, "Channel number", token);
       return -1;
     }
 
@@ -322,7 +389,7 @@ int add_beats(
 
   if (strcmp(token, ":") != 0)
   {
-    error(tokens, ":", token);
+    print_error(tokens, ":", token);
     return -1;
   }
 
@@ -354,7 +421,7 @@ int add_beats(
 
       if (token_type != 2)
       {
-        error(tokens, "volume integer", token);
+        print_error(tokens, "volume integer", token);
         return -1;
       }
 
@@ -380,7 +447,7 @@ int add_beats(
 
     if (token_type != 2)
     {
-      error(tokens, "a beat number", token);
+      print_error(tokens, "a beat number", token);
       continue;
     }
 
@@ -410,7 +477,7 @@ int add_beats(
   }
 }
 
-int parse_pattern(Tokens *tokens)
+int Song::parse_pattern(Tokens *tokens)
 {
   int token_type;
   char token[1024], token1[1024];
@@ -453,7 +520,7 @@ printf("parsing pattern: %s\n", token);
 
   if (strcmp(token, "{") != 0)
   {
-    error(tokens, "{", token);
+    print_error(tokens, "{", token);
     return -1;
   }
 
@@ -472,7 +539,7 @@ printf("parsing pattern: %s\n", token);
 
       if (token_type!=1)
       {
-        error(tokens, "variable to set", token);
+        print_error(tokens, "variable to set", token);
         return -1;
       }
 
@@ -480,7 +547,7 @@ printf("parsing pattern: %s\n", token);
 
       if (strcmp(token1, "=") != 0)
       {
-        error(tokens, "=", token1);
+        print_error(tokens, "=", token1);
         return -1;
       }
 
@@ -488,7 +555,7 @@ printf("parsing pattern: %s\n", token);
 
       if (token_type != 2)
       {
-        error(tokens, "a number", token1);
+        print_error(tokens, "a number", token1);
         return -1;
       }
 
@@ -496,7 +563,7 @@ printf("parsing pattern: %s\n", token);
 
       if (i == 0)
       {
-        error(tokens, "a non-zero integer", token1);
+        print_error(tokens, "a non-zero integer", token1);
         return -1;
       }
 
@@ -513,7 +580,7 @@ printf("parsing pattern: %s\n", token);
 
         if (strcmp(token1, "/") != 0)
         {
-          error(tokens, "/", token1);
+          print_error(tokens, "/", token1);
           return -1;
         }
 
@@ -521,7 +588,7 @@ printf("parsing pattern: %s\n", token);
 
         if (token_type != 2)
         {
-          error(tokens, "a number", token1);
+          print_error(tokens, "a number", token1);
           return -1;
         }
 
@@ -529,7 +596,7 @@ printf("parsing pattern: %s\n", token);
 
         if (i == 0)
         {
-          error(tokens, "a non-zero integer", token1);
+          print_error(tokens, "a non-zero integer", token1);
           return -1;
         }
 
@@ -556,7 +623,7 @@ printf("parsing pattern: %s\n", token);
 
       if (strcmp(token, ";") != 0)
       {
-        error(tokens, ";", token);
+        print_error(tokens, ";", token);
         return -1;
       }
 
@@ -688,7 +755,7 @@ printf("%f %f %d %d\n",low_beat,next_beat,pattern_duration[patterns_ptr],pattern
   return 0;
 }
 
-int parse_section(Tokens *tokens)
+int Song::parse_section(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -715,7 +782,7 @@ printf("parsing section: %s\n", token);
 
   if (strcmp(token, "{") != 0)
   {
-    error(tokens, "{", token);
+    print_error(tokens, "{", token);
     return -1;
   }
 
@@ -734,7 +801,7 @@ printf("parsing section: %s\n", token);
 
       if (strcmp(token, ":") != 0)
       {
-        error(tokens, ":", token);
+        print_error(tokens, ":", token);
         return -1;
       }
 
@@ -771,7 +838,7 @@ printf("parsing section: %s\n", token);
           else
         if (strcmp(token, ",") != 0)
         {
-          error(tokens, ",", token);
+          print_error(tokens, ",", token);
           return -1;
         }
       }
@@ -783,7 +850,145 @@ printf("parsing section: %s\n", token);
   return 0;
 }
 
-void play_pattern(MidiFile *midi_file, int i)
+int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
+{
+  int token_type;
+  char token[1024];
+  int repeat;
+  int i, x;
+
+#ifdef DEBUG
+printf("playing song\n");
+#endif
+
+  token_type = tokens->get(token);
+
+  if (strcmp(token, "{") != 0)
+  {
+    if (token_type == 1)
+    {
+      //song_name[255] = 0;
+      //strncpy((char *)song_name, token, 254);
+      song_info.set_song_name(token);
+
+      token_type = tokens->get(token);
+
+      if (strcmp(token, "{") != 0)
+      {
+        print_error(tokens, "{", token);
+        return -1;
+      }
+    }
+      else
+    {
+      printf(">> In file: %s\n", tokens->get_filename());
+      printf("Error: Expecting song name or '{' but got '%s' on line %d.\n",
+        token, tokens->get_line());
+      return -1;
+    }
+  }
+
+  midi_file->write_header(&song_info);
+  midi_file->write_bpm(&song_info);
+
+  while(1)
+  {
+    token_type = tokens->get(token);
+
+    if (strcmp(token, "}") == 0)
+    {
+      break;
+    }
+
+    if (strcmp(token, "play") == 0)
+    {
+      token_type = tokens->get(token);
+
+      if (strcmp(token, ":") != 0)
+      {
+        print_error(tokens, ":", token);
+        return -1;
+      }
+
+      while(1)
+      {
+        repeat = 1;
+
+        token_type = tokens->get(token);
+        if (token_type==2)
+        {
+          repeat = atoi(token);
+          token_type = tokens->get(token);
+        }
+
+        i = get_literal((char *)section_names, token);
+
+        if (i != -1)
+        {
+          for (x = 0; x < repeat; x++) { play_section(midi_file, i); }
+        }
+          else
+        {
+          i = get_literal((char *)pattern_names, token);
+
+          if (i == -1)
+          {
+            printf(">> In file: %s\n", tokens->get_filename());
+            printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
+              token, tokens->get_line());
+          }
+            else
+          {
+            for (x = 0; x < repeat; x++) { play_pattern(midi_file, i); }
+          }
+        }
+
+        token_type = tokens->get(token);
+
+        if (strcmp(token, ";") == 0)
+        {
+          break;
+        }
+          else
+        if (strcmp(token, ",") != 0)
+        {
+          print_error(tokens, ",", token);
+          return -1;
+        }
+      }
+    }
+  }
+
+  midi_file->write_footer();
+
+  return 0;
+}
+
+void Song::play_section(MidiFile *midi_file, int i)
+{
+  int ptr;
+
+  ptr = find_section(i);
+
+  if (interactive == 1)
+  {
+    printf("Section: ");
+    print_name((char *)section_names, i);
+  }
+
+#ifdef DEBUG
+printf("playing section: %d\n",i);
+#endif
+
+  while(1)
+  {
+    if (sections[ptr] == -1) { break; }
+    play_pattern(midi_file, sections[ptr]);
+    ptr++;
+  }
+}
+
+void Song::play_pattern(MidiFile *midi_file, int i)
 {
   int ptr;
   uint8_t midi_data[256];
@@ -839,17 +1044,17 @@ printf("usleep(%d) ", pattern_duration[ptr]);
 #endif
 
 #ifndef WINDOWS
-        if (mr_timer.it_value.tv_sec == 0 && mr_timer.it_value.tv_usec == 0)
+        if (play_timer.it_value.tv_sec == 0 && play_timer.it_value.tv_usec == 0)
         {
           usleep(pattern_duration[ptr]);
         }
           else
         {
-          getitimer(ITIMER_PROF, &mr_timer);
+          getitimer(ITIMER_PROF, &play_timer);
 
-          if (mr_timer.it_value.tv_usec != 0)
+          if (play_timer.it_value.tv_usec != 0)
           {
-            r = mr_timer.it_value.tv_usec;
+            r = play_timer.it_value.tv_usec;
           }
             else
           {
@@ -858,31 +1063,31 @@ printf("usleep(%d) ", pattern_duration[ptr]);
 
           if (r > pattern_duration[ptr]) { r = pattern_duration[ptr]; }
 #ifdef DEBUG
-printf("currtime %d %d\n",mr_timer.it_value.tv_sec,mr_timer.it_value.tv_usec);
-printf("interval %d %d\n",mr_timer.it_interval.tv_sec,mr_timer.it_interval.tv_usec);
-printf("%d %d\n",pattern_duration[ptr], r);
+printf("currtime %d %d\n", play_timer.it_value.tv_sec, play_timer.it_value.tv_usec);
+printf("interval %d %d\n", play_timer.it_interval.tv_sec, play_timer.it_interval.tv_usec);
+printf("%d %d\n", pattern_duration[ptr], r);
 #endif
           usleep(pattern_duration[ptr]-
-                 (((20 - mr_timer.it_value.tv_sec) * 1000000) + r));
-                 /* (1000000 - mr_timer.it_value.tv_usec))); */
+                 (((20 - play_timer.it_value.tv_sec) * 1000000) + r));
+                 /* (1000000 - play_timer.it_value.tv_usec))); */
         }
 
-        mr_timer.it_value.tv_sec = 20;
-        mr_timer.it_value.tv_usec = 0;
+        play_timer.it_value.tv_sec = 20;
+        play_timer.it_value.tv_usec = 0;
 
-        /* setitimer(ITIMER_REAL,&mr_timer, 0); */
-        setitimer(ITIMER_PROF,&mr_timer, 0);
+        /* setitimer(ITIMER_REAL,&play_timer, 0); */
+        setitimer(ITIMER_PROF,&play_timer, 0);
 #else
-        if (mr_timer == 0)
+        if (play_timer == 0)
         {
           Sleep(pattern_duration[ptr] / 1000);
         }
           else
         {
-          Sleep((pattern_duration[ptr] / 1000) - (timeGetTime() - mr_timer));
+          Sleep((pattern_duration[ptr] / 1000) - (timeGetTime() - play_timer));
         }
 
-        mr_timer = timeGetTime();
+        play_timer = timeGetTime();
 #endif
         k = 0;
       }
@@ -894,7 +1099,7 @@ printf("%d %d\n",pattern_duration[ptr], r);
       note.duration = pattern_duration[ptr];
       note.midi_channel = pattern_channel[ptr];
 
-      midi_file->write_note(&note);
+      midi_file->write_note(&song_info, &note);
     }
 
     ptr++;
@@ -905,242 +1110,34 @@ printf(" ]\n");
 #endif
 }
 
-void play_section(MidiFile *midi_file, int i)
+char *Song::dirname_m(char *dir)
 {
-  int ptr;
+  int i;
 
-  ptr = find_section(i);
+  i = strlen(dir);
 
-  if (interactive == 1)
+  while (i >= 0)
   {
-    printf("Section: ");
-    print_name((char *)section_names, i);
+    if (dir[i] == '/' || dir[i] == '\\') { break; }
+    i--;
   }
 
-#ifdef DEBUG
-printf("playing section: %d\n",i);
-#endif
+  if (i < 0) { return NULL; }
 
-  while(1)
-  {
-    if (sections[ptr] == -1) { break; }
-    play_pattern(midi_file, sections[ptr]);
-    ptr++;
-  }
+  dir[i] = 0;
+
+  return dir + i;
 }
 
-int parse_song(Tokens *tokens, MidiFile *midi_file)
+void Song::print_error(Tokens *tokens, const char *expect, const char *got)
 {
-  int token_type;
-  char token[1024];
-  int repeat;
-  int i, x;
-
-#ifdef DEBUG
-printf("playing song\n");
-#endif
-
-  token_type = tokens->get(token);
-
-  if (strcmp(token, "{") != 0)
-  {
-    if (token_type == 1)
-    {
-      song_name[255] = 0;
-      strncpy((char *)song_name, token, 254);
-
-      token_type = tokens->get(token);
-
-      if (strcmp(token, "{") != 0)
-      {
-        error(tokens, "{", token);
-        return -1;
-      }
-    }
-      else
-    {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Expecting song name or '{' but got '%s' on line %d.\n",
-        token, tokens->get_line());
-      return -1;
-    }
-  }
-
-  midi_file->write_header(song_info.get_song_name());
-  midi_file->write_bpm();
-
-  while(1)
-  {
-    token_type = tokens->get(token);
-
-    if (strcmp(token, "}") == 0)
-    {
-      break;
-    }
-
-    if (strcmp(token, "play") == 0)
-    {
-      token_type = tokens->get(token);
-
-      if (strcmp(token, ":") != 0)
-      {
-        error(tokens, ":", token);
-        return -1;
-      }
-
-      while(1)
-      {
-        repeat = 1;
-
-        token_type = tokens->get(token);
-        if (token_type==2)
-        {
-          repeat = atoi(token);
-          token_type = tokens->get(token);
-        }
-
-        i = get_literal((char *)section_names, token);
-
-        if (i != -1)
-        {
-          for (x = 0; x < repeat; x++) { play_section(midi_file, i); }
-        }
-          else
-        {
-          i = get_literal((char *)pattern_names, token);
-
-          if (i == -1)
-          {
-            printf(">> In file: %s\n", tokens->get_filename());
-            printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
-              token, tokens->get_line());
-          }
-            else
-          {
-            for (x = 0; x < repeat; x++) { play_pattern(midi_file, i); }
-          }
-        }
-
-        token_type = tokens->get(token);
-
-        if (strcmp(token, ";") == 0)
-        {
-          break;
-        }
-          else
-        if (strcmp(token, ",") != 0)
-        {
-          error(tokens, ",", token);
-          return -1;
-        }
-      }
-    }
-  }
-
-  midi_file->write_footer();
-
-  return 0;
+  printf(">> In file: %s\n", tokens->get_filename());
+  printf("Parse Error:  Expected '%s' and got '%s' on line %d.\n",
+    expect, got, tokens->get_line());
 }
 
-int main_parser(Tokens *tokens, MidiFile *midi_file)
+void Song::signal_catch(int sig)
 {
-  int token_type, i;
-  char token[1024];
-#ifdef DEBUG
-  int t = 0;
-#endif
-
-#ifndef WINDOWS
-  signal_catch(0);
-  mr_timer.it_value.tv_sec = 0;
-  mr_timer.it_value.tv_usec = 0;
-#endif
-
-  while(1)
-  {
-    token_type = tokens->get(token);
-
-    if (token_type == -1) { break; }
-
-    if (strcmp(token, "set") == 0)
-    {
-      i = parse_set(tokens);
-      if (i == -1) { return -1; }
-    }
-      else
-    if (strcmp(token, "define") == 0)
-    {
-      i = parse_define(tokens);
-      if (i == -1) { return -1; }
-    }
-      else
-    if (strcmp(token, "include") == 0)
-    {
-      i = parse_include(tokens, midi_file);
-      if (i == -1) { return -1; }
-    }
-      else
-    if (strcmp(token, "pattern") == 0)
-    {
-      i = parse_pattern(tokens);
-      if (i == -1) { return -1; }
-    }
-      else
-    if (strcmp(token, "section") == 0)
-    {
-      i = parse_section(tokens);
-      if (i == -1) { return -1; }
-    }
-      else
-    if (strcmp(token, "song") == 0)
-    {
-      i = parse_song(tokens, midi_file);
-      if (i == -1) { return -1; }
-    }
-      else
-    {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Unknown token '%s' on line %d.\n",
-        token, tokens->get_line());
-      return -1;
-    }
-  }
-
-#ifdef WINDOWS
-  Sleep(1000);
-#endif
-
-  return 0;
-}
-
-void print_song()
-{
-#ifdef DEBUG
-  printf("Defines:\n");
-  print_all(defines);
-  printf("Patterns:\n");
-  print_all(pattern_names);
-  printf("Sections:\n");
-  print_all(section_names);
-
-  i = 0;
-  t = 0;
-
-  while(1)
-  {
-    if (i == sections_ptr) { break; }
-
-    if (sections[i++] == -1)
-    {
-      printf("\n");
-      t++;
-      continue;
-    }
-
-    printf("%d ", sections[i - 1]);
-  }
-
-printf("song_name=%s\n", song_name);
-#endif
+  signal(SIGPROF, signal_catch);
 }
 

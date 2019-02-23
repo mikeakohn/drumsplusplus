@@ -24,11 +24,11 @@ public:
   void close();
   bool is_open() { return out != NULL; }
 
-  void write_header(const char *song_name);
-  void write_note(Note *note);
+  void write_header(SongInfo *song_info);
+  void write_note(SongInfo *song_info, Note *note);
   void write_footer();
-  void write_bpm();
-  void write_time_signature();
+  void write_bpm(SongInfo *song_info);
+  void write_time_signature(SongInfo *song_info);
 
 private:
   int write_int32(int n);

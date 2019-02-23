@@ -22,7 +22,7 @@
 // FIXME - OUCH
 extern char defines[MAX_LITERAL_SPACE];
 extern int line;
-extern struct SongInfo song_info;
+//extern struct SongInfo song_info;
 extern unsigned char pattern[PATTERN_HEAP_SIZE];
 extern unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 extern unsigned char pattern_volume[PATTERN_HEAP_SIZE];
@@ -31,9 +31,9 @@ extern int sections[SECTIONS_HEAP_SIZE];
 extern int song[MAX_SONG_SIZE];
 extern int patterns_ptr;
 extern int sections_ptr;
-extern unsigned char pattern_names[MAX_LITERAL_SPACE];
-extern unsigned char section_names[MAX_LITERAL_SPACE];
-extern unsigned char song_name[256];
+extern char pattern_names[MAX_LITERAL_SPACE];
+extern char section_names[MAX_LITERAL_SPACE];
+//extern unsigned char song_name[256];
 //extern int midiout;
 extern char interactive;
 //extern FILE *out;

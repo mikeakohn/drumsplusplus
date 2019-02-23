@@ -44,7 +44,7 @@ void MidiFile::close()
 {
 }
 
-void MidiFile::write_header(const char *song_name)
+void MidiFile::write_header(SongInfo *song_info)
 {
   const char *info = "Created by Drums++ 2.0 (http://dpp.mikekohn.net/).";
 
@@ -60,13 +60,13 @@ void MidiFile::write_header(const char *song_name)
   marker = ftell(out);
   write_int32(0);
 
-  if (song_name[0] != 0)
+  if (song_info->song_name != "")
   {
     write_var(0);
     putc(0xff, out);
     putc(0x03, out);
-    write_var(strlen(song_name));
-    fprintf(out, "%s", song_name);
+    write_var(song_info->song_name.size());
+    fprintf(out, "%s", song_info->song_name.c_str());
   }
 
   write_var(0);
@@ -76,13 +76,13 @@ void MidiFile::write_header(const char *song_name)
   fprintf(out,"%s", info);
 }
 
-void MidiFile::write_note(Note *note)
+void MidiFile::write_note(SongInfo *song_info, Note *note)
 {
   int d;
 
   if (!is_open()) { return; }
 
-  d = (int)((float)DIVISIONS * ((float)note->duration / (float)(60000000 / song_info.bpm)));
+  d = (int)((float)DIVISIONS * ((float)note->duration / (float)(60000000 / song_info->bpm)));
 
   write_var(0);
   putc(0x90 + note->midi_channel, out);
@@ -117,7 +117,7 @@ void MidiFile::write_footer()
   fseek(out, i, 0);
 }
 
-void MidiFile::write_bpm()
+void MidiFile::write_bpm(SongInfo *song_info)
 {
   int d;
 
@@ -127,21 +127,21 @@ void MidiFile::write_bpm()
   putc(0xff, out);
   putc(0x51, out);
   putc(0x03, out);
-  d = 60000000 / song_info.bpm;
+  d = 60000000 / song_info->bpm;
   putc(d >> 16, out);
   putc((d >> 8) & 0xff,out);
   putc(d & 0xff, out);
 }
 
-void MidiFile::write_time_signature()
+void MidiFile::write_time_signature(SongInfo *song_info)
 {
   int d;
 
   if (!is_open()) { return; }
 
-  d = song_info.time_signature_base;
+  d = song_info->time_signature_base;
 
-  switch (song_info.time_signature_base)
+  switch (song_info->time_signature_base)
   {
     case 32: d = 5; break;
     case 16: d = 4; break;
@@ -157,7 +157,7 @@ void MidiFile::write_time_signature()
   putc(0x58, out);
   putc(0x04, out);
 
-  putc(song_info.time_signature_beats, out);
+  putc(song_info->time_signature_beats, out);
   putc(d, out);
 
   if (d == 3)

@@ -14,7 +14,7 @@
 
 int insert_define(char *buffer, char *token, char *value);
 int insert_literal(char *buffer, char *token);
-void print_all(char *buffer);
+void print_all(const char *buffer);
 int get_define(char *buffer, char *token, char *value);
 int get_literal(char *buffer, char *token);
 int is_number(char *myString);

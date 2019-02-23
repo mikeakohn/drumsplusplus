@@ -22,7 +22,7 @@
 
 // FIXME: OUCH
 char defines[MAX_LITERAL_SPACE];
-struct SongInfo song_info;
+//struct SongInfo song_info;
 unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
@@ -31,9 +31,9 @@ int sections[SECTIONS_HEAP_SIZE];
 int song[MAX_SONG_SIZE];
 int patterns_ptr;
 int sections_ptr;
-unsigned char pattern_names[MAX_LITERAL_SPACE];
-unsigned char section_names[MAX_LITERAL_SPACE];
-unsigned char song_name[256];
+char pattern_names[MAX_LITERAL_SPACE];
+char section_names[MAX_LITERAL_SPACE];
+//unsigned char song_name[256];
 //int midiout;
 char interactive;
 //FILE *out;
@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
   Tokens tokens;
   MidiFile midi_file;
   MidiPlayer midi_player;
+  Song *song;
   const char *infile = "";
   const char *outfile = "/dev/midi00";
   int t;
@@ -133,14 +134,14 @@ int main(int argc, char *argv[])
   pattern_names[1] = 0;
   section_names[0] = 0;
   section_names[1] = 0;
-  strcpy((char *)song_name,"undefined");
 
   //current_filename = infile;
 
-  main_parser(&tokens, &midi_file);
+  song = new Song();
+  song->parse(&tokens, &midi_file);
 
 #ifdef DEBUG
-song.Print();
+  song->Print();
 #endif
 
   tokens.close();
@@ -153,6 +154,8 @@ song.Print();
   {
     midi_player.close();
   }
+
+  delete song;
 
   return 0;
 }
