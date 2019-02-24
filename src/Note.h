@@ -16,7 +16,7 @@
 
 struct Note
 {
-  uint8_t instrument;
+  uint8_t value;
   uint32_t volume;
   int duration;
   int midi_channel;

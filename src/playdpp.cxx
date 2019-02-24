@@ -25,7 +25,6 @@ unsigned char pattern[PATTERN_HEAP_SIZE];
 unsigned int pattern_duration[PATTERN_HEAP_SIZE];
 unsigned char pattern_volume[PATTERN_HEAP_SIZE];
 unsigned char pattern_channel[PATTERN_HEAP_SIZE];
-int song[MAX_SONG_SIZE];
 int patterns_ptr;
 char pattern_names[MAX_LITERAL_SPACE];
 

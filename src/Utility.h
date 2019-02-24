@@ -12,13 +12,7 @@
 #ifndef DPP_UTILITY_H
 #define DPP_UTILITY_H
 
-int insert_literal(char *buffer, char *token);
-void print_all(const char *buffer);
-int get_literal(char *buffer, char *token);
-int is_number(char *myString);
-int search_end_buffer(int *buffer);
-int find_pattern(int i);
-void print_name(char *buffer, int i);
+int is_number(char *s);
 
 #endif
 

@@ -87,14 +87,14 @@ void MidiFile::write_note(SongInfo *song_info, Note *note)
   write_var(0);
   putc(0x90 + note->midi_channel, out);
 
-  putc(note->instrument, out);
+  putc(note->value, out);
   putc(note->volume, out);
 
   /* if (d != 0 || 1 == 1) */
   {
     write_var(d);
     putc(0x80 + note->midi_channel, out);
-    putc(note->instrument, out);
+    putc(note->value, out);
     /* putc(0, out); */
     putc(64, out);
   }

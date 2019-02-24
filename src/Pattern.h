@@ -13,6 +13,7 @@
 #define DPP_PATTERN_H
 
 #include <string>
+#include <vector>
 
 class Pattern
 {
@@ -20,18 +21,29 @@ public:
   Pattern();
   ~Pattern();
 
-  void set_name(const char *name) { this->name = name; }
-  void set_duration(int duration) { this->duration = duration; }
-  void set_volume(int volume) { this->volume = volume; }
-  void set_channel(int channel) { this->channel = channel; }
+  struct Data
+  {
+    Data() : value(0), volume(0), channel(0), duration(0) { }
+    uint8_t value;
+    uint8_t volume;
+    uint8_t channel;
+    uint32_t duration;
+  };
+
+  void set_name(std::string &name) { this->name = name; }
+  void set_index(int index) { this->index = index; }
+  int get_index() { return index; }
+  std::string &get_name() { return name; }
+  int get_count() { return data.size(); }
+  Data &get_data(int index) { return data[index]; }
+
+  void add(uint8_t value, uint8_t volume, uint8_t channel, uint32_t duration);
   void print();
 
 private:
   std::string name;
-  int duration;
-  int volume;
-  int channel;
-
+  std::vector<Data> data;
+  int index;
 };
 
 #endif

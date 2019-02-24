@@ -114,7 +114,15 @@ void Song::print_song()
   }
 
   printf("Patterns:\n");
-  print_all(pattern_names);
+
+  const int count = pattern_names.size();
+
+  for (int n; n < count; n++)
+  {
+    std::string &pattern_name = pattern_names[n];
+
+    patterns[pattern_name].print();
+  }
 
   printf("Sections:\n");
 
@@ -350,10 +358,15 @@ int Song::add_beats(
   char token[1024];
   int m, modifier, c;
 
+  // This will read an entire line of beats from a pattern for
+  // a single instrument in that pattern.
+
   c = 0;
 
   token_type = tokens->get(token);
 
+  // Allows a different channel number to be used (another instrument
+  // other than drums.
   if (strcmp(token, "/") == 0)
   {
     token_type = tokens->get(token);
@@ -372,6 +385,7 @@ int Song::add_beats(
         midi_channel, tokens->get_line());
       midi_channel = 9;
     }
+
     token_type = tokens->get(token);
   }
 
@@ -401,6 +415,7 @@ int Song::add_beats(
 
       if (strcmp(token, "%") == 0)
       {
+        // Allow the volume of the drum to drift.
         srand(time(NULL));
         modifier = rand() % song_info.drift;
         if ((rand() % 2) == 0) { modifier = -modifier; }
@@ -424,12 +439,10 @@ int Song::add_beats(
       m = m + modifier;
 
       if (m < 0) { m = 0; }
+      if (m > 127) { m = 127; }
 
-      if (m > 127)
-      {
-        m = 127;
-      }
-
+      // FIXME: This is a bad way to do this.  Would be better to check
+      // if a : exist after reading the beat values.
       beats[ptr - 1].volume = m;
       continue;
     }
@@ -440,27 +453,28 @@ int Song::add_beats(
       continue;
     }
 
+    beats[ptr].value = atof(token);
     beats[ptr].instrument = i;
-    beats[ptr].beat = atof(token);
     beats[ptr].channel = midi_channel;
 
-    if (beats[ptr].beat < 1)
+    if (beats[ptr].value < 1)
     {
       printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Beat is less than 1 on line %d.  Ignoring.\n",
         tokens->get_line());
-      beats[ptr].beat = 0;
+      beats[ptr].value = 0;
     }
 
-    if (beats[ptr].beat >= song_info.time_signature_beats + 1)
+    if (beats[ptr].value >= song_info.time_signature_beats + 1)
     {
       printf(">> In file: %s\n", tokens->get_filename());
       printf("Error: Beat exceeds beats per measure on line %d.  Ignoring.\n",
         tokens->get_line());
-      beats[ptr].beat = 0;
+      beats[ptr].value = 0;
     }
 
     beats[ptr].volume = song_info.default_volume;
+
     ptr++;
     c++;
   }
@@ -470,10 +484,6 @@ int Song::parse_pattern(Tokens *tokens)
 {
   int token_type;
   char token[1024], token1[1024];
-  //int instrument[256];
-  //int channel[256];
-  //float beat[256];
-  //unsigned char volume[256];
   Beat beats[256];
   int ptr;
   char value[1024];
@@ -500,7 +510,19 @@ int Song::parse_pattern(Tokens *tokens)
     return -1;
   }
 
-  insert_literal((char *)pattern_names, token);
+  if (patterns.find(token) != patterns.end())
+  {
+    printf(">> In file: %s\n", tokens->get_filename());
+    printf("Error: Pattern %s is already defined on line %d\n",
+      token, tokens->get_line());
+    return -1;
+  }
+
+  Pattern &pattern = patterns[token];
+
+  const int index = patterns.size();
+
+  pattern_names[index] = token;
 
 #ifdef DEBUG
 printf("parsing pattern: %s\n", token);
@@ -523,6 +545,7 @@ printf("parsing pattern: %s\n", token);
 
     if (strcmp(token, "}") == 0) { break;}
 
+    // Check if there are some modifications to the global song values.
     if (strcmp(token, "set") == 0)
     {
       token_type = tokens->get(token);
@@ -620,6 +643,7 @@ printf("parsing pattern: %s\n", token);
       continue;
     }
 
+    // Read next line of beat information for an instrument from a pattern.
     if (token_type == TOKEN_NUMBER)
     {
       beats[ptr].channel = midi_channel;
@@ -658,83 +682,118 @@ printf("parsing pattern: %s\n", token);
     }
   }
 
+#ifdef DEBUG
+for (int n = 0; n < ptr; n++)
+{
+  printf("beat: %d %d %f %d\n",
+    beats[n].instrument,
+    beats[n].channel,
+    beats[n].value,
+    beats[n].volume);
+}
+#endif
+
+  // Convert beat information to the pattern format.  This looks like
+  // basically a slow sorting algorithm.
   while(1)
   {
     low_beat = time_signature_beats + 1;
     next_beat = time_signature_beats + 1;
     count = 0;
 
+    // Find the next lowest beat value and a count of how many
+    // times that beat value exists.
     for (i = 0; i < ptr; i++)
     {
-      if (beats[i].beat > 0)
+      if (beats[i].value > 0)
       {
-        if (low_beat > beats[i].beat)
+        if (beats[i].value < low_beat)
         {
-          low_beat = beats[i].beat;
+          low_beat = beats[i].value;
           count = 0;
         }
 
-        if (beats[i].beat == low_beat) { count++; }
+        if (beats[i].value == low_beat) { count++; }
       }
     }
 
+    // If no more beats were found, break from adding to the pattern list.
     if (count == 0)
     {
       if (ptr == 0)
       {
+        // If this is the first beat, add an empty pattern?
+        int duration = (int)((time_signature_beats) * beat_time);
+
+#if 0
         pattern[patterns_ptr] = 0;
-        pattern_duration[patterns_ptr] = (int)((time_signature_beats)*beat_time);
+        pattern_duration[patterns_ptr] = duration;
         pattern_volume[patterns_ptr] = 0;
         pattern_channel[patterns_ptr] = midi_channel;
         patterns_ptr++;
+#endif
+        pattern.add(0, 0, midi_channel, duration);
       }
 
       break;
     }
 
+    // Find the next lowest value.  It seems like this whole process
+    // could be done without doing this.
     for (i = 0; i < ptr; i++)
     {
-      if (beats[i].beat > 0)
+      if (beats[i].value > 0)
       {
-        if (next_beat > beats[i].beat && beats[i].beat != low_beat)
+        if (beats[i].value < next_beat && beats[i].value != low_beat)
         {
-          next_beat = beats[i].beat;
+          next_beat = beats[i].value;
         }
       }
     }
 
+    // Scan through all the beats, and if it is equal to the current
+    // lowest, add it to the pattern.  Then clear it out so it doesn't
+    // get counted again.
     for (i = 0; i < ptr; i++)
     {
-      if (beats[i].beat == low_beat)
+      if (beats[i].value == low_beat)
       {
         if (num_notes == 0 && low_beat != 1)
         {
+          int duration = (int)((low_beat - 1) * beat_time);
+
+#if 0
           pattern[patterns_ptr] = 0;
-          pattern_duration[patterns_ptr] = (int)((low_beat - 1) * beat_time);
+          pattern_duration[patterns_ptr] = duration;
           pattern_volume[patterns_ptr] = 0;
           pattern_channel[patterns_ptr] = midi_channel;
           patterns_ptr++;
+#endif
+          pattern.add(0, 0, midi_channel, duration);
         }
 
-        pattern[patterns_ptr] = beats[i].instrument;
+        int duration = 0;
+
 
         if (count == 1)
         {
-          pattern_duration[patterns_ptr] = (int)((next_beat - low_beat) * beat_time);
-        }
-          else
-        {
-          pattern_duration[patterns_ptr] = 0;
+          duration = (int)((next_beat - low_beat) * beat_time);
+
+          //pattern_duration[patterns_ptr] = duration;
         }
 
-#ifdef DEBUG
-printf("%f %f %d %d\n",low_beat,next_beat,pattern_duration[patterns_ptr],pattern[patterns_ptr]);
-#endif
+#if 0
+        pattern[patterns_ptr] = beats[i].instrument;
         pattern_volume[patterns_ptr] = beats[i].volume;
         pattern_channel[patterns_ptr] = beats[i].channel;
         patterns_ptr++;
+#endif
+        pattern.add(beats[i].instrument,
+                    beats[i].volume,
+                    beats[i].channel,
+                    duration);
 
-        beats[i].beat = 0;
+        beats[i].value = 0;
 
         count--;
       }
@@ -743,7 +802,7 @@ printf("%f %f %d %d\n",low_beat,next_beat,pattern_duration[patterns_ptr],pattern
     num_notes++;
   }
 
-  pattern[patterns_ptr++] = 255;
+  //pattern[patterns_ptr++] = 255;
 
   return 0;
 }
@@ -810,18 +869,17 @@ printf("parsing section: %s\n", token);
           token_type = tokens->get(token);
         }
 
-        i = get_literal((char *)pattern_names, token);
-
-        if (i == -1)
+        if (patterns.find(token) == patterns.end())
         {
           printf(">> In file: %s\n", tokens->get_filename());
           printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
             token, tokens->get_line());
+          return -1;
         }
-          else
-        {
-          section.add_pattern(i, repeat);
-        }
+
+        i = patterns[token].get_index();
+
+        section.add_pattern(i, repeat);
 
         token_type = tokens->get(token);
 
@@ -849,11 +907,7 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
   int token_type;
   char token[1024];
   int repeat;
-  int i, x;
-
-#ifdef DEBUG
-printf("playing song\n");
-#endif
+  int x;
 
   token_type = tokens->get(token);
 
@@ -861,8 +915,6 @@ printf("playing song\n");
   {
     if (token_type == TOKEN_ALPHA)
     {
-      //song_name[255] = 0;
-      //strncpy((char *)song_name, token, 254);
       song_info.set_song_name(token);
 
       token_type = tokens->get(token);
@@ -927,17 +979,18 @@ printf("playing song\n");
         }
           else
         {
-          i = get_literal((char *)pattern_names, token);
-
-          if (i == -1)
+          if (patterns.find(token) == patterns.end())
           {
             printf(">> In file: %s\n", tokens->get_filename());
             printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
               token, tokens->get_line());
           }
-            else
+
+          std::string pattern_name = token;
+
+          for (x = 0; x < repeat; x++)
           {
-            for (x = 0; x < repeat; x++) { play_pattern(midi_file, i); }
+            play_pattern(midi_file, pattern_name);
           }
         }
 
@@ -987,16 +1040,18 @@ printf("playing section: %s\n", section_name.c_str());
 
   for (auto it = patterns.begin(); it != patterns.end(); it++)
   {
-    play_pattern(midi_file, *it);
+    std::string &pattern_name = pattern_names[*it];
+
+    play_pattern(midi_file, pattern_name);
     ptr++;
   }
 
   return 0;
 }
 
-void Song::play_pattern(MidiFile *midi_file, int i)
+void Song::play_pattern(MidiFile *midi_file, std::string &pattern_name)
 {
-  int ptr;
+  int index, count;
   uint8_t midi_data[256];
   Note note;
   uint32_t k;
@@ -1005,13 +1060,11 @@ void Song::play_pattern(MidiFile *midi_file, int i)
   int n;
 #endif
 
-  ptr = find_pattern(i);
+  Pattern &pattern = patterns[pattern_name];
 
   if (interactive == 1)
   {
-    printf("Pattern: ");
-    print_name((char *)pattern_names, i);
-    fflush(stdout);
+    printf("Pattern: %s", pattern_name.c_str());
   }
 
 #ifdef DEBUG
@@ -1020,10 +1073,11 @@ printf("[ ");
 #endif
 
   k = 0;
+  count = pattern.get_count();
 
-  while(1)
+  for (index = 0; index < count; index++)
   {
-    if (pattern[ptr] == 255) break;
+    Pattern::Data &data = pattern.get_data(index);
 
 #ifdef DEBUG
 printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[ptr]);
@@ -1031,11 +1085,11 @@ printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[p
 
     if (!midi_file->is_open())
     {
-      midi_data[k++] = 0x90 + pattern_channel[ptr];
-      midi_data[k++] = pattern[ptr];
-      midi_data[k++] = pattern_volume[ptr];
+      midi_data[k++] = 0x90 + data.channel;
+      midi_data[k++] = data.value;
+      midi_data[k++] = data.volume;
 
-      if (pattern_duration[ptr] != 0)
+      if (data.duration != 0)
       {
         // FIXME: Enable this later.
         //midi_player->play(midi_data, k);
@@ -1046,13 +1100,13 @@ printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[p
         }
 
 #ifdef DEBUG
-printf("usleep(%d) ", pattern_duration[ptr]);
+printf("usleep(%d) ", data.duration);
 #endif
 
 #ifndef WINDOWS
         if (play_timer.it_value.tv_sec == 0 && play_timer.it_value.tv_usec == 0)
         {
-          usleep(pattern_duration[ptr]);
+          usleep(data.duration);
         }
           else
         {
@@ -1067,15 +1121,14 @@ printf("usleep(%d) ", pattern_duration[ptr]);
             r = 0;
           }
 
-          if (r > pattern_duration[ptr]) { r = pattern_duration[ptr]; }
+          if (r > data.duration) { r = data.duration; }
 #ifdef DEBUG
 printf("currtime %d %d\n", play_timer.it_value.tv_sec, play_timer.it_value.tv_usec);
 printf("interval %d %d\n", play_timer.it_interval.tv_sec, play_timer.it_interval.tv_usec);
-printf("%d %d\n", pattern_duration[ptr], r);
+printf("%d %d\n", data.duration, r);
 #endif
-          usleep(pattern_duration[ptr]-
+          usleep(data.duration -
                  (((20 - play_timer.it_value.tv_sec) * 1000000) + r));
-                 /* (1000000 - play_timer.it_value.tv_usec))); */
         }
 
         play_timer.it_value.tv_sec = 20;
@@ -1086,11 +1139,11 @@ printf("%d %d\n", pattern_duration[ptr], r);
 #else
         if (play_timer == 0)
         {
-          Sleep(pattern_duration[ptr] / 1000);
+          Sleep(data.duration / 1000);
         }
           else
         {
-          Sleep((pattern_duration[ptr] / 1000) - (timeGetTime() - play_timer));
+          Sleep((data.duration / 1000) - (timeGetTime() - play_timer));
         }
 
         play_timer = timeGetTime();
@@ -1100,15 +1153,15 @@ printf("%d %d\n", pattern_duration[ptr], r);
     }
       else
     {
-      note.instrument = pattern[ptr];
-      note.volume = pattern_volume[ptr];
-      note.duration = pattern_duration[ptr];
-      note.midi_channel = pattern_channel[ptr];
+      note.value = data.value;
+      note.volume = data.volume;
+      note.duration = data.duration;
+      note.midi_channel = data.channel;
 
       midi_file->write_note(&song_info, &note);
     }
 
-    ptr++;
+    //ptr++;
   }
 
 #ifdef DEBUG
