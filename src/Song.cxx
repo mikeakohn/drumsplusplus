@@ -38,7 +38,13 @@ Song::~Song()
 {
 }
 
-int Song::parse(Tokens *tokens, MidiFile *midi_file)
+void Song::set_midi(MidiFile *midi_file, MidiPlayer *midi_player)
+{
+  this->midi_file = midi_file;
+  this->midi_player = midi_player;
+}
+
+int Song::parse(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -67,7 +73,7 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
       else
     if (strcmp(token, "include") == 0)
     {
-      if (parse_include(tokens, midi_file) == -1) { return -1; }
+      if (parse_include(tokens) == -1) { return -1; }
     }
       else
     if (strcmp(token, "pattern") == 0)
@@ -82,7 +88,7 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
       else
     if (strcmp(token, "song") == 0)
     {
-      if (parse_song(tokens, midi_file) == -1) { return -1; }
+      if (parse_song(tokens) == -1) { return -1; }
     }
       else
     {
@@ -289,7 +295,7 @@ int Song::parse_define(Tokens *tokens)
   return 0;
 }
 
-int Song::parse_include(Tokens *tokens, MidiFile *midi_file)
+int Song::parse_include(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -333,7 +339,7 @@ int Song::parse_include(Tokens *tokens, MidiFile *midi_file)
   }
     else
   {
-    if (parse(tokens_include, midi_file) == -1) { return -1; }
+    if (parse(tokens_include) == -1) { return -1; }
   }
 
   tokens_include->close();
@@ -868,7 +874,7 @@ printf("parsing section: %s\n", token);
   return 0;
 }
 
-int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
+int Song::parse_song(Tokens *tokens)
 {
   int token_type;
   char token[1024];
@@ -939,7 +945,7 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
         {
           for (x = 0; x < repeat; x++)
           {
-            play_section(midi_file, section_name);
+            play_section(section_name);
           }
         }
           else
@@ -955,7 +961,7 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
 
           for (x = 0; x < repeat; x++)
           {
-            play_pattern(midi_file, pattern_name);
+            play_pattern(pattern_name);
           }
         }
 
@@ -980,7 +986,7 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
   return 0;
 }
 
-int Song::play_section(MidiFile *midi_file, std::string &section_name)
+int Song::play_section(std::string &section_name)
 {
   int ptr;
 
@@ -1013,14 +1019,14 @@ printf("playing section: %s\n", section_name.c_str());
 
     std::string &pattern_name = pattern_names[*it];
 
-    play_pattern(midi_file, pattern_name);
+    play_pattern(pattern_name);
     ptr++;
   }
 
   return 0;
 }
 
-void Song::play_pattern(MidiFile *midi_file, std::string &pattern_name)
+void Song::play_pattern(std::string &pattern_name)
 {
   int index, count;
   uint8_t midi_data[256];
@@ -1062,8 +1068,7 @@ printf("%x %x %x, ", 0x90 + data.channel, data.value, data.volume);
 
       if (data.duration != 0)
       {
-        // FIXME: Enable this later.
-        //midi_player->play(midi_data, k);
+        midi_player->play(midi_data, k);
 
         for (r = 0; r < k; r++)
         {
