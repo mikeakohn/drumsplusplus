@@ -23,12 +23,11 @@
 #include <mmsystem.h>
 #endif
 
-#include "general.h"
-#include "Tokens.h"
 #include "MidiFile.h"
 #include "MidiPlayer.h"
 #include "Note.h"
 #include "Song.h"
+#include "Tokens.h"
 #include "Utility.h"
 
 Song::Song() : interactive(0)
@@ -665,7 +664,7 @@ printf("parsing pattern: %s\n", token);
 
       strcpy(value, defines[token].c_str());
 
-      if (is_number(value) == 0)
+      if (Utility::is_number(value) == false)
       {
         printf(">> In file: %s\n", tokens->get_filename());
         printf("Error: %s is not a number on line %d\n",

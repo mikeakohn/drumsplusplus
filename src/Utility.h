@@ -12,7 +12,15 @@
 #ifndef DPP_UTILITY_H
 #define DPP_UTILITY_H
 
-int is_number(char *s);
+class Utility
+{
+public:
+  static bool is_number(char *s);
+
+private:
+  Utility() { }
+  ~Utility() { }
+};
 
 #endif
 

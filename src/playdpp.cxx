@@ -13,20 +13,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "general.h"
 #include "version.h"
 #include "MidiFile.h"
 #include "MidiPlayer.h"
 #include "Song.h"
 #include "SongInfo.h"
-
-// FIXME: OUCH
-unsigned char pattern[PATTERN_HEAP_SIZE];
-unsigned int pattern_duration[PATTERN_HEAP_SIZE];
-unsigned char pattern_volume[PATTERN_HEAP_SIZE];
-unsigned char pattern_channel[PATTERN_HEAP_SIZE];
-int patterns_ptr;
-char pattern_names[MAX_LITERAL_SPACE];
 
 int main(int argc, char *argv[])
 {
@@ -116,11 +107,6 @@ int main(int argc, char *argv[])
   }
 
   printf("Infile: %s\n\n", infile);
-
-  pattern_names[0] = 0;
-  pattern_names[1] = 0;
-
-  //current_filename = infile;
 
   song = new Song();
 

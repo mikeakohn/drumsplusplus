@@ -13,9 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "general.h"
 #include "MidiFile.h"
 #include "Note.h"
+#include "SongInfo.h"
 
 #define DIVISIONS 240
 

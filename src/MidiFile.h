@@ -13,6 +13,7 @@
 #define DPP_MIDI_FILE_H
 
 #include "Note.h"
+#include "SongInfo.h"
 
 class MidiFile
 {

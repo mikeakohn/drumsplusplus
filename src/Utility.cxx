@@ -13,10 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "general.h"
 #include "Utility.h"
 
-int is_number(char *s)
+bool Utility::is_number(char *s)
 {
   int r = 0;
 
@@ -27,8 +26,6 @@ int is_number(char *s)
     r++;
   }
 
-  if (r == 0) { return 0; }
-
-  return 1;
+  return r == 0 ? false : true;
 }
 

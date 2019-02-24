@@ -19,7 +19,6 @@
 #include <mmsystem.h>
 #endif
 
-#include "general.h"
 #include "MidiPlayer.h"
 
 #define DIVISIONS 240
