@@ -3,7 +3,7 @@ CC=gcc
 CPP=g++
 
 #DEBUG=-DDEBUG
-CFLAGS=-Wall $(DEBUG) -O3
+CFLAGS=-Wall -O3 -std=c++11 $(DEBUG)
 OBJECTS= \
   Tokens.o \
   MidiFile.o \

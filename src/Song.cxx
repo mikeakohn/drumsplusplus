@@ -123,7 +123,7 @@ void Song::print()
 
   const int count = pattern_names.size();
 
-  for (int n; n < count; n++)
+  for (int n = 0; n < count; n++)
   {
     std::string &pattern_name = pattern_names[n];
 
@@ -988,8 +988,6 @@ int Song::parse_song(Tokens *tokens)
 
 int Song::play_section(std::string &section_name)
 {
-  int ptr;
-
   if (sections.find(section_name) == sections.end())
   {
     printf("Could not find section %s\n", section_name.c_str());
@@ -1020,7 +1018,6 @@ printf("playing section: %s\n", section_name.c_str());
     std::string &pattern_name = pattern_names[*it];
 
     play_pattern(pattern_name);
-    ptr++;
   }
 
   return 0;
