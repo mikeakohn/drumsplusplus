@@ -1,8 +1,8 @@
 
 set bpm=120;
-set defaultvolume=127;
+set default_volume=127;
 set drift=5;
-set timesignature=4/4;
+set time_signature=4/4;
 set midi_channel=9;   // Default midi_channel is now 9 (the drum kit)
 
 define bassdrum 36
@@ -21,7 +21,7 @@ pattern main
 pattern test
 {
   set bpm=240;            // set beats per minute to 240 only in this pattern 
-  set timesignature=3/4;  // set the time signature to 3/4 only in this pattern
+  set time_signature=3/4; // set the time signature to 3/4 only in this pattern
   set midi_channel=1;     // set the midi channel to 1 only in this pattern
 
   bassdrum: 1 2 3;

@@ -1,8 +1,8 @@
 
 set bpm=120;
-set defaultvolume=127;
+set default_volume=127;
 set drift=5;
-set timesignature=4/4;
+set time_signature=4/4;
 
 define bassdrum 36
 define snare 38
