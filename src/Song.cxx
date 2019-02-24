@@ -42,9 +42,6 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
 {
   int token_type;
   char token[1024];
-#ifdef DEBUG
-  int t = 0;
-#endif
 
 #ifndef WINDOWS
   signal_catch(0);
@@ -103,7 +100,7 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
   return 0;
 }
 
-void Song::print_song()
+void Song::print()
 {
   printf("Defines:\n");
 
@@ -1043,7 +1040,7 @@ void Song::play_pattern(MidiFile *midi_file, std::string &pattern_name)
   }
 
 #ifdef DEBUG
-printf("  Playing pattern %d\n",i);
+printf("  Playing pattern %s\n", pattern_name.c_str());
 printf("[ ");
 #endif
 
@@ -1055,7 +1052,7 @@ printf("[ ");
     Pattern::Data &data = pattern.get_data(index);
 
 #ifdef DEBUG
-printf("%x %x %x, ", 0x90 + pattern_channel[ptr], pattern[ptr], pattern_volume[ptr]);
+printf("%x %x %x, ", 0x90 + data.channel, data.value, data.volume);
 #endif
 
     if (!midi_file->is_open())
@@ -1098,8 +1095,12 @@ printf("usleep(%d) ", data.duration);
 
           if (r > data.duration) { r = data.duration; }
 #ifdef DEBUG
-printf("currtime %d %d\n", play_timer.it_value.tv_sec, play_timer.it_value.tv_usec);
-printf("interval %d %d\n", play_timer.it_interval.tv_sec, play_timer.it_interval.tv_usec);
+printf("currtime %ld %ld\n",
+  play_timer.it_value.tv_sec,
+  play_timer.it_value.tv_usec);
+printf("interval %ld %ld\n",
+  play_timer.it_interval.tv_sec,
+  play_timer.it_interval.tv_usec);
 printf("%d %d\n", data.duration, r);
 #endif
           usleep(data.duration -

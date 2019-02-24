@@ -27,7 +27,7 @@ public:
   ~Song();
 
   int parse(Tokens *tokens, MidiFile *midi_file);
-  void print_song();
+  void print();
   void set_interactive() { interactive = 1; }
 
 private:

@@ -2,6 +2,7 @@ VPATH=../src
 CC=gcc
 CPP=g++
 
+#DEBUG=-DDEBUG
 CFLAGS=-Wall $(DEBUG) -O3
 OBJECTS= \
   Tokens.o \

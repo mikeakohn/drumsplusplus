@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
   song->parse(&tokens, &midi_file);
 
 #ifdef DEBUG
-  song->Print();
+  song->print();
 #endif
 
   tokens.close();
