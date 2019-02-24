@@ -1,9 +1,9 @@
 
-set bpm=120;
-set default_volume=127;
-set drift=5;
-set time_signature=4/4;
-set midi_channel=9;   // Default midi_channel is now 9 (the drum kit)
+set bpm = 120;
+set default_volume = 127;
+set drift = 5;
+set time_signature = 4/4;
+set midi_channel = 9;   // Default midi_channel is now 9 (the drum kit)
 
 define bassdrum 36
 define snare 38
@@ -61,5 +61,4 @@ song test_song
   // play: test, test;
   play: 2 test, a, b, 2a;
 }
-
 
