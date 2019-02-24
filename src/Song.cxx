@@ -724,13 +724,6 @@ for (int n = 0; n < ptr; n++)
         // If this is the first beat, add an empty pattern?
         int duration = (int)((time_signature_beats) * beat_time);
 
-#if 0
-        pattern[patterns_ptr] = 0;
-        pattern_duration[patterns_ptr] = duration;
-        pattern_volume[patterns_ptr] = 0;
-        pattern_channel[patterns_ptr] = midi_channel;
-        patterns_ptr++;
-#endif
         pattern.add(0, 0, midi_channel, duration);
       }
 
@@ -761,13 +754,6 @@ for (int n = 0; n < ptr; n++)
         {
           int duration = (int)((low_beat - 1) * beat_time);
 
-#if 0
-          pattern[patterns_ptr] = 0;
-          pattern_duration[patterns_ptr] = duration;
-          pattern_volume[patterns_ptr] = 0;
-          pattern_channel[patterns_ptr] = midi_channel;
-          patterns_ptr++;
-#endif
           pattern.add(0, 0, midi_channel, duration);
         }
 
@@ -777,16 +763,8 @@ for (int n = 0; n < ptr; n++)
         if (count == 1)
         {
           duration = (int)((next_beat - low_beat) * beat_time);
-
-          //pattern_duration[patterns_ptr] = duration;
         }
 
-#if 0
-        pattern[patterns_ptr] = beats[i].instrument;
-        pattern_volume[patterns_ptr] = beats[i].volume;
-        pattern_channel[patterns_ptr] = beats[i].channel;
-        patterns_ptr++;
-#endif
         pattern.add(beats[i].instrument,
                     beats[i].volume,
                     beats[i].channel,
@@ -800,8 +778,6 @@ for (int n = 0; n < ptr; n++)
 
     num_notes++;
   }
-
-  //pattern[patterns_ptr++] = 255;
 
   return 0;
 }
