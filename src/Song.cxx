@@ -86,9 +86,8 @@ int Song::parse(Tokens *tokens, MidiFile *midi_file)
     }
       else
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Unknown token '%s' on line %d.\n",
-        token, tokens->get_line());
+      printf("Error: Unknown token '%s' at %s:%d.\n",
+        token, tokens->get_filename(), tokens->get_line());
       return -1;
     }
   }
@@ -173,9 +172,8 @@ int Song::parse_set(Tokens *tokens)
 
     if (song_info.bpm == 0)
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Tempo (bpm) must be non-zero; line %d\n",
-        tokens->get_line());
+      printf("Error: Tempo (bpm) must be non-zero at %s:%d\n",
+        tokens->get_filename(), tokens->get_line());
       return -1;
     }
   }
@@ -224,17 +222,15 @@ int Song::parse_set(Tokens *tokens)
 
     if (song_info.time_signature_beats == 0)
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Time signature numerator must be non-zero; line %d\n",
-        tokens->get_line());
+      printf("Error: Time signature numerator must be non-zero at %s:%d\n",
+        tokens->get_filename(), tokens->get_line());
       return -1;
     }
       else
     if (song_info.time_signature_base == 0)
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Timesignature denominator must be non-zero; line %d\n",
-        tokens->get_line());
+      printf("Error: Timesignature denominator must be non-zero at %s:%d\n",
+        tokens->get_filename(), tokens->get_line());
       return -1;
     }
   }
@@ -251,9 +247,8 @@ int Song::parse_set(Tokens *tokens)
   }
     else
   {
-    printf(">> In file: %s\n", tokens->get_filename());
-    printf("Error: Unknown setting '%s' on line %d.\n",
-      token, tokens->get_line());
+    printf("Error: Unknown setting '%s' at %s:%d.\n",
+      token, tokens->get_filename(), tokens->get_line());
     return -1;
   }
 
@@ -329,9 +324,8 @@ int Song::parse_include(Tokens *tokens, MidiFile *midi_file)
 
   if (tokens_include->open(filename) != 0)
   {
-    printf(">> In file: %s\n", tokens->get_filename());
-    printf("Error: included file not found: %s on line %d.\n",
-      filename, tokens->get_line());
+    printf("Error: included file not found: %s at %s:%d.\n",
+      filename, tokens->get_filename(), tokens->get_line());
 
     delete tokens_include;
 
@@ -406,9 +400,8 @@ int Song::add_beats(
     {
       if (c == 0)
       {
-        printf(">> In file: %s\n", tokens->get_filename());
-        printf("Parse Error: Unexpected token %s on line %d.\n",
-          token, tokens->get_line());
+        printf("Error: Unexpected token '%s' at %s:%d.\n",
+          token, tokens->get_filename(), tokens->get_line());
         return -1;
       }
 
@@ -460,17 +453,15 @@ int Song::add_beats(
 
     if (beats[ptr].value < 1)
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Beat is less than 1 on line %d.  Ignoring.\n",
-        tokens->get_line());
+      printf("Error: Beat is less than 1 at %s:%d.  Ignoring.\n",
+        tokens->get_filename(), tokens->get_line());
       beats[ptr].value = 0;
     }
 
     if (beats[ptr].value >= song_info.time_signature_beats + 1)
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Beat exceeds beats per measure on line %d.  Ignoring.\n",
-        tokens->get_line());
+      printf("Error: Beat exceeds beats per measure at %s:%d.  Ignoring.\n",
+        tokens->get_filename(), tokens->get_line());
       beats[ptr].value = 0;
     }
 
@@ -505,17 +496,15 @@ int Song::parse_pattern(Tokens *tokens)
 
   if (token_type != TOKEN_ALPHA)
   {
-    printf(">> In file: %s\n", tokens->get_filename());
-    printf("Error: Pattern is not alphanumeric on line %d\n",
-      tokens->get_line());
+    printf("Error: Pattern is not alphanumeric at %s:%d\n",
+      tokens->get_filename(), tokens->get_line());
     return -1;
   }
 
   if (patterns.find(token) != patterns.end())
   {
-    printf(">> In file: %s\n", tokens->get_filename());
-    printf("Error: Pattern %s is already defined on line %d\n",
-      token, tokens->get_line());
+    printf("Error: Pattern %s is already defined at %s:%d\n",
+      token, tokens->get_filename(), tokens->get_line());
     return -1;
   }
 
@@ -662,9 +651,8 @@ printf("parsing pattern: %s %d\n", token, index);
     {
       if (defines.find(token) == defines.end())
       {
-        printf(">> In file: %s\n", tokens->get_filename());
-        printf("Error: %s is undefined on line %d\n",
-          token, tokens->get_line());
+        printf("Error: %s is undefined at %s:%d\n",
+          token, tokens->get_filename(), tokens->get_line());
         return -1;
       }
 
@@ -672,9 +660,8 @@ printf("parsing pattern: %s %d\n", token, index);
 
       if (Utility::is_number(value) == false)
       {
-        printf(">> In file: %s\n", tokens->get_filename());
-        printf("Error: %s is not a number on line %d\n",
-          token, tokens->get_line());
+        printf("Error: %s is not a number at %s:%d\n",
+          token, tokens->get_filename(), tokens->get_line());
         return -1;
       }
 
@@ -800,9 +787,8 @@ int Song::parse_section(Tokens *tokens)
 
   if (token_type != TOKEN_ALPHA)
   {
-    printf(">> In file: %s\n", tokens->get_filename());
-    printf("Error: Section is not alphanumeric on line %d\n",
-      tokens->get_line());
+    printf("Error: Section is not alphanumeric on line %s:%d\n",
+      tokens->get_filename(), tokens->get_line());
     return -1;
   }
 
@@ -852,9 +838,8 @@ printf("parsing section: %s\n", token);
 
         if (patterns.find(token) == patterns.end())
         {
-          printf(">> In file: %s\n", tokens->get_filename());
-          printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
-            token, tokens->get_line());
+          printf("Error: Undefined pattern '%s' at %s:%d.\n",
+            token, tokens->get_filename(), tokens->get_line());
           return -1;
         }
 
@@ -908,9 +893,8 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
     }
       else
     {
-      printf(">> In file: %s\n", tokens->get_filename());
-      printf("Error: Expecting song name or '{' but got '%s' on line %d.\n",
-        token, tokens->get_line());
+      printf("Error: Expecting song name or '{' but got '%s' at %s:%d.\n",
+        token, tokens->get_filename(), tokens->get_line());
       return -1;
     }
   }
@@ -962,9 +946,9 @@ int Song::parse_song(Tokens *tokens, MidiFile *midi_file)
         {
           if (patterns.find(token) == patterns.end())
           {
-            printf(">> In file: %s\n", tokens->get_filename());
-            printf("Error:  Undefined pattern '%s' on line %d.  Ignoring.\n",
-              token, tokens->get_line());
+            printf("Error:  Undefined pattern '%s' at %s:%d.\n",
+              token, tokens->get_filename(), tokens->get_line());
+            return -1;
           }
 
           std::string pattern_name = token;
