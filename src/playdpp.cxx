@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
   printf(COPYRIGHT);
   fflush(stdout);
 
-  if (tokens.open(infile) == 0)
+  if (tokens.open(infile) != 0)
   {
-    printf("Error:  Couldn't open file %s\n", infile);
+    printf("Error: Couldn't open file %s\n", infile);
     exit(1);
   }
 

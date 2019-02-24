@@ -12,7 +12,7 @@
 #ifndef DPP_VERSION_H
 #define DPP_VERSION_H
 
-#define DLPLAYER_INFO "\nDrums++ 2.00alpha1 - Feburary 24, 2019\n"
+#define DLPLAYER_INFO "\nDrums++ 2.00beta1 - Feburary 24, 2019\n"
 #define COPYRIGHT "Copyright 2003-2019 Michael Kohn\n\n"
 
 #endif
