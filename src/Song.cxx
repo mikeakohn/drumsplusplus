@@ -111,6 +111,11 @@ void Song::print()
 
   printf("Patterns:\n");
 
+  for (auto it = pattern_names.begin(); it != pattern_names.end(); it++)
+  {
+    printf("  %d) %s\n", it->first, it->second.c_str());
+  }
+
   const int count = pattern_names.size();
 
   for (int n; n < count; n++)
@@ -514,14 +519,18 @@ int Song::parse_pattern(Tokens *tokens)
     return -1;
   }
 
-  Pattern &pattern = patterns[token];
+  std::string pattern_name = token;
 
   const int index = patterns.size();
+  Pattern &pattern = patterns[pattern_name];
 
   pattern_names[index] = token;
 
+  pattern.set_name(pattern_name);
+  pattern.set_index(index);
+
 #ifdef DEBUG
-printf("parsing pattern: %s\n", token);
+printf("parsing pattern: %s %d\n", token, index);
 #endif
 
   token_type = tokens->get(token);
@@ -1012,6 +1021,12 @@ printf("playing section: %s\n", section_name.c_str());
 
   for (auto it = patterns.begin(); it != patterns.end(); it++)
   {
+    if (pattern_names.find(*it) == pattern_names.end())
+    {
+      printf("Error: Unknown pattern '%d'.\n", *it);
+      return -1;
+    }
+
     std::string &pattern_name = pattern_names[*it];
 
     play_pattern(midi_file, pattern_name);
@@ -1166,9 +1181,8 @@ char *Song::dirname_m(char *dir)
 
 void Song::print_error(Tokens *tokens, const char *expect, const char *got)
 {
-  printf(">> In file: %s\n", tokens->get_filename());
-  printf("Parse Error:  Expected '%s' and got '%s' on line %d.\n",
-    expect, got, tokens->get_line());
+  printf("Error: Expected '%s' and got '%s' at %s:%d.\n",
+    expect, got, tokens->get_filename(), tokens->get_line());
 }
 
 void Song::signal_catch(int sig)
