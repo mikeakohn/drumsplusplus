@@ -42,6 +42,10 @@ int MidiFile::open(const char *filename)
 
 void MidiFile::close()
 {
+  if (out != NULL)
+  {
+    fclose(out);
+  }
 }
 
 void MidiFile::write_header(SongInfo *song_info)
