@@ -362,6 +362,7 @@ int Song::add_beats(
   // This will read an entire line of beats from a pattern for
   // a single instrument in that pattern.
 
+  modifier = 0;
   c = 0;
 
   token_type = tokens->get(token);
