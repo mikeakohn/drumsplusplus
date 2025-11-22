@@ -7,7 +7,6 @@ CFLAGS=-Wall -O3 -std=c++11 $(DEBUG)
 OBJECTS= \
   Tokens.o \
   MidiFile.o \
-  MidiPlayer.o \
   Pattern.o \
   Section.o \
   Song.o \

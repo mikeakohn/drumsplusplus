@@ -24,7 +24,6 @@
 #endif
 
 #include "MidiFile.h"
-#include "MidiPlayer.h"
 #include "Note.h"
 #include "Song.h"
 #include "Tokens.h"
@@ -38,22 +37,15 @@ Song::~Song()
 {
 }
 
-void Song::set_midi(MidiFile *midi_file, MidiPlayer *midi_player)
+void Song::set_midi(MidiFile *midi_file)
 {
-  this->midi_file   = midi_file;
-  this->midi_player = midi_player;
+  this->midi_file = midi_file;
 }
 
 int Song::parse(Tokens &tokens)
 {
   int token_type;
   char token[1024];
-
-#ifndef WINDOWS
-  signal_catch(0);
-  play_timer.it_value.tv_sec = 0;
-  play_timer.it_value.tv_usec = 0;
-#endif
 
   while (true)
   {
@@ -1021,13 +1013,7 @@ printf("playing section: %s\n", section_name.c_str());
 void Song::play_pattern(std::string &pattern_name)
 {
   int index, count;
-  uint8_t midi_data[256];
   Note note;
-  uint32_t k;
-  uint32_t r;
-#ifdef WINDOWS
-  int n;
-#endif
 
   Pattern &pattern = patterns[pattern_name];
 
@@ -1041,7 +1027,6 @@ printf("  Playing pattern %s\n", pattern_name.c_str());
 printf("[ ");
 #endif
 
-  k = 0;
   count = pattern.get_count();
 
   for (index = 0; index < count; index++)
@@ -1052,88 +1037,12 @@ printf("[ ");
 printf("%x %x %x, ", 0x90 + data.channel, data.value, data.volume);
 #endif
 
-    if (!midi_file->is_open())
-    {
-      midi_data[k++] = 0x90 + data.channel;
-      midi_data[k++] = data.value;
-      midi_data[k++] = data.volume;
+    note.value        = data.value;
+    note.volume       = data.volume;
+    note.duration     = data.duration;
+    note.midi_channel = data.channel;
 
-      if (data.duration != 0)
-      {
-        midi_player->play(midi_data, k);
-
-        for (r = 0; r < k; r++)
-        {
-          printf(" %02x\n", midi_data[r]);
-        }
-
-#ifdef DEBUG
-printf("usleep(%d) ", data.duration);
-#endif
-
-#ifndef WINDOWS
-        if (play_timer.it_value.tv_sec == 0 && play_timer.it_value.tv_usec == 0)
-        {
-          usleep(data.duration);
-        }
-          else
-        {
-          getitimer(ITIMER_PROF, &play_timer);
-
-          if (play_timer.it_value.tv_usec != 0)
-          {
-            r = play_timer.it_value.tv_usec;
-          }
-            else
-          {
-            r = 0;
-          }
-
-          if (r > data.duration) { r = data.duration; }
-#ifdef DEBUG
-printf("currtime %ld %ld\n",
-  play_timer.it_value.tv_sec,
-  play_timer.it_value.tv_usec);
-printf("interval %ld %ld\n",
-  play_timer.it_interval.tv_sec,
-  play_timer.it_interval.tv_usec);
-printf("%d %d\n", data.duration, r);
-#endif
-          usleep(data.duration -
-                 (((20 - play_timer.it_value.tv_sec) * 1000000) + r));
-        }
-
-        play_timer.it_value.tv_sec = 20;
-        play_timer.it_value.tv_usec = 0;
-
-        /* setitimer(ITIMER_REAL,&play_timer, 0); */
-        setitimer(ITIMER_PROF,&play_timer, 0);
-#else
-        if (play_timer == 0)
-        {
-          Sleep(data.duration / 1000);
-        }
-          else
-        {
-          Sleep((data.duration / 1000) - (timeGetTime() - play_timer));
-        }
-
-        play_timer = timeGetTime();
-#endif
-        k = 0;
-      }
-    }
-      else
-    {
-      note.value        = data.value;
-      note.volume       = data.volume;
-      note.duration     = data.duration;
-      note.midi_channel = data.channel;
-
-      midi_file->write_note(song_info, note);
-    }
-
-    //ptr++;
+    midi_file->write_note(song_info, note);
   }
 
 #ifdef DEBUG
@@ -1164,10 +1073,5 @@ void Song::print_error(Tokens &tokens, const char *expect, const char *got)
 {
   printf("Error: Expected '%s' and got '%s' at %s:%d.\n",
     expect, got, tokens.get_filename(), tokens.get_line());
-}
-
-void Song::signal_catch(int sig)
-{
-  signal(SIGPROF, signal_catch);
 }
 

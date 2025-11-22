@@ -15,7 +15,6 @@
 
 #include "version.h"
 #include "MidiFile.h"
-#include "MidiPlayer.h"
 #include "Song.h"
 #include "SongInfo.h"
 
@@ -23,7 +22,6 @@ int main(int argc, char *argv[])
 {
   Tokens tokens;
   MidiFile midi_file;
-  MidiPlayer midi_player;
   Song *song;
   const char *infile = "";
   const char *outfile = "/dev/midi00";
@@ -36,8 +34,7 @@ int main(int argc, char *argv[])
     printf(DLPLAYER_INFO);
     printf(COPYRIGHT);
     printf("Usage: playdpp <infile>\n\n");
-    printf("       -midi <midi_device: default is /dev/midi00>\n");
-    printf("       -o <.midi file to output to: disables /dev/midi>\n");
+    printf("       -o <.mid file to output>\n");
     printf("       -i [ will show patters as they are played ]\n\n");
     exit(0);
   }
@@ -47,11 +44,6 @@ int main(int argc, char *argv[])
     if (strcmp(argv[t], "-i") == 0)
     {
       interactive = 1;
-    }
-      else
-    if (strcmp(argv[t],"-midi") == 0)
-    {
-      outfile = argv[++t];
     }
       else
     if (strcmp(argv[t],"-o") == 0)
@@ -97,22 +89,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if (!midi_file.is_open())
-  {
-    if (midi_player.open(outfile) != 0)
-    {
-      tokens.close();
-      exit(1);
-    }
-  }
-
   printf("Infile: %s\n\n", infile);
 
   song = new Song();
 
   if (interactive == 1) { song->set_interactive(); }
 
-  song->set_midi(&midi_file, &midi_player);
+  song->set_midi(&midi_file);
   song->parse(tokens);
 
 #ifdef DEBUG
@@ -124,10 +107,6 @@ int main(int argc, char *argv[])
   if (midi_file.is_open())
   {
     midi_file.close();
-  }
-    else
-  {
-    midi_player.close();
   }
 
   delete song;
