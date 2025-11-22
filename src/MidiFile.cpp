@@ -52,7 +52,7 @@ void MidiFile::close()
 
 void MidiFile::write_header(const SongInfo &song_info)
 {
-  const char *info = "Created by Drums++ 2.0 (http://dpp.mikekohn.net/).";
+  const char *info = "Created by Drums++ 2.0 (https://www.mikekohn.net/).";
 
   if (!is_open()) { return; }
 
