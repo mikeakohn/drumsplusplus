@@ -44,7 +44,7 @@ void Song::set_midi(MidiFile *midi_file, MidiPlayer *midi_player)
   this->midi_player = midi_player;
 }
 
-int Song::parse(Tokens *tokens)
+int Song::parse(Tokens &tokens)
 {
   int token_type;
   char token[1024];
@@ -57,7 +57,7 @@ int Song::parse(Tokens *tokens)
 
   while (true)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (token_type == -1) { break; }
 
@@ -93,7 +93,7 @@ int Song::parse(Tokens *tokens)
       else
     {
       printf("Error: Unknown token '%s' at %s:%d.\n",
-        token, tokens->get_filename(), tokens->get_line());
+        token, tokens.get_filename(), tokens.get_line());
       return -1;
     }
   }
@@ -141,14 +141,14 @@ void Song::print()
   printf("song_name=%s\n", song_info.get_song_name());
 }
 
-int Song::parse_set(Tokens *tokens)
+int Song::parse_set(Tokens &tokens)
 {
   int token_type;
   char token[1024];
   char equals[1024];
   char value[1024];
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (token_type != TOKEN_ALPHA)
   {
@@ -156,7 +156,7 @@ int Song::parse_set(Tokens *tokens)
     return -1;
   }
 
-  token_type = tokens->get(equals);
+  token_type = tokens.get(equals);
 
   if (strcmp(equals, "=") != 0)
   {
@@ -164,7 +164,7 @@ int Song::parse_set(Tokens *tokens)
     return -1;
   }
 
-  token_type = tokens->get(value);
+  token_type = tokens.get(value);
 
   if (token_type != TOKEN_NUMBER)
   {
@@ -179,7 +179,7 @@ int Song::parse_set(Tokens *tokens)
     if (song_info.bpm == 0)
     {
       printf("Error: Tempo (bpm) must be non-zero at %s:%d\n",
-        tokens->get_filename(), tokens->get_line());
+        tokens.get_filename(), tokens.get_line());
       return -1;
     }
   }
@@ -192,7 +192,7 @@ int Song::parse_set(Tokens *tokens)
     if (song_info.default_volume > 127)
     {
       printf("Warning: default volume is higher than the max 127; line %d\n",
-        tokens->get_line());
+        tokens.get_line());
       song_info.default_volume = 127;
     }
   }
@@ -206,7 +206,7 @@ int Song::parse_set(Tokens *tokens)
   {
     song_info.time_signature_beats = atoi(value);
 
-    token_type = tokens->get(equals);
+    token_type = tokens.get(equals);
 
     if (strcmp(equals, "/") != 0)
     {
@@ -214,7 +214,7 @@ int Song::parse_set(Tokens *tokens)
       return -1;
     }
 
-    token_type = tokens->get(value);
+    token_type = tokens.get(value);
 
     if (token_type != TOKEN_NUMBER)
     {
@@ -228,14 +228,14 @@ int Song::parse_set(Tokens *tokens)
     if (song_info.time_signature_beats == 0)
     {
       printf("Error: Time signature numerator must be non-zero at %s:%d\n",
-        tokens->get_filename(), tokens->get_line());
+        tokens.get_filename(), tokens.get_line());
       return -1;
     }
       else
     if (song_info.time_signature_base == 0)
     {
       printf("Error: Timesignature denominator must be non-zero at %s:%d\n",
-        tokens->get_filename(), tokens->get_line());
+        tokens.get_filename(), tokens.get_line());
       return -1;
     }
   }
@@ -246,18 +246,18 @@ int Song::parse_set(Tokens *tokens)
 
     if (song_info.midi_channel > 15)
     {
-      printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n", song_info.midi_channel, tokens->get_line());
+      printf("Warning: MIDI channel %d is higher than the maximum 15; line %d\n", song_info.midi_channel, tokens.get_line());
       song_info.midi_channel = 9;
     }
   }
     else
   {
     printf("Error: Unknown setting '%s' at %s:%d.\n",
-      token, tokens->get_filename(), tokens->get_line());
+      token, tokens.get_filename(), tokens.get_line());
     return -1;
   }
 
-  token_type = tokens->get(equals);
+  token_type = tokens.get(equals);
 
   if (strcmp(equals, ";") != 0)
   {
@@ -268,13 +268,13 @@ int Song::parse_set(Tokens *tokens)
   return 0;
 }
 
-int Song::parse_define(Tokens *tokens)
+int Song::parse_define(Tokens &tokens)
 {
   int token_type;
   char name[1024];
   char value[1024];
 
-  token_type = tokens->get(name);
+  token_type = tokens.get(name);
 
   if (token_type != TOKEN_ALPHA)
   {
@@ -282,7 +282,7 @@ int Song::parse_define(Tokens *tokens)
     return -1;
   }
 
-  token_type = tokens->get(value);
+  token_type = tokens.get(value);
 
   if (defines.find(name) != defines.end())
   {
@@ -294,17 +294,15 @@ int Song::parse_define(Tokens *tokens)
   return 0;
 }
 
-int Song::parse_include(Tokens *tokens)
+int Song::parse_include(Tokens &tokens)
 {
   int token_type;
   char token[1024];
   char filename[1024];
   char lastfilename[1024];
-  Tokens *tokens_include;
+  Tokens tokens_include;
 
-  tokens_include = new Tokens();
-
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (token_type != TOKEN_STRING)
   {
@@ -316,7 +314,7 @@ int Song::parse_include(Tokens *tokens)
 
   if (token[0] != '/')
   {
-    strcpy(lastfilename, tokens->get_filename());
+    strcpy(lastfilename, tokens.get_filename());
 
     if (dirname_m(lastfilename) != 0)
     {
@@ -327,12 +325,10 @@ int Song::parse_include(Tokens *tokens)
 
   strcat(filename, token);
 
-  if (tokens_include->open(filename) != 0)
+  if (tokens_include.open(filename) != 0)
   {
     printf("Error: included file not found: %s at %s:%d.\n",
-      filename, tokens->get_filename(), tokens->get_line());
-
-    delete tokens_include;
+      filename, tokens.get_filename(), tokens.get_line());
 
     return -1;
   }
@@ -341,14 +337,13 @@ int Song::parse_include(Tokens *tokens)
     if (parse(tokens_include) == -1) { return -1; }
   }
 
-  tokens_include->close();
-  delete tokens_include;
+  tokens_include.close();
 
   return 0;
 }
 
 int Song::add_beats(
-  Tokens *tokens,
+  Tokens &tokens,
   Beat *beats,
   int &ptr,
   int i,
@@ -364,13 +359,13 @@ int Song::add_beats(
   modifier = 0;
   c = 0;
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   // Allows a different channel number to be used (another instrument
   // other than drums.
   if (strcmp(token, "/") == 0)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (token_type != TOKEN_NUMBER)
     {
@@ -383,11 +378,11 @@ int Song::add_beats(
     if (midi_channel > 15)
     {
       printf("Warning: MIDI channel %d is higher than the max 15; line %d\n",
-        midi_channel, tokens->get_line());
+        midi_channel, tokens.get_line());
       midi_channel = 9;
     }
 
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
   }
 
   if (strcmp(token, ":") != 0)
@@ -398,7 +393,7 @@ int Song::add_beats(
 
   while (true)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (strcmp(token, ";") == 0) return 0;
 
@@ -407,11 +402,11 @@ int Song::add_beats(
       if (c == 0)
       {
         printf("Error: Unexpected token '%s' at %s:%d.\n",
-          token, tokens->get_filename(), tokens->get_line());
+          token, tokens.get_filename(), tokens.get_line());
         return -1;
       }
 
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (strcmp(token, "%") == 0)
       {
@@ -419,7 +414,7 @@ int Song::add_beats(
         srand(time(NULL));
         modifier = rand() % song_info.drift;
         if ((rand() % 2) == 0) { modifier = -modifier; }
-        token_type = tokens->get(token);
+        token_type = tokens.get(token);
       }
 
       if (token_type != TOKEN_NUMBER)
@@ -433,7 +428,7 @@ int Song::add_beats(
       if (m > 127)
       {
         printf("Warning: Volume is higher than 127 on line %d.\n",
-          tokens->get_line());
+          tokens.get_line());
       }
 
       m = m + modifier;
@@ -460,14 +455,14 @@ int Song::add_beats(
     if (beats[ptr].value < 1)
     {
       printf("Error: Beat is less than 1 at %s:%d.  Ignoring.\n",
-        tokens->get_filename(), tokens->get_line());
+        tokens.get_filename(), tokens.get_line());
       beats[ptr].value = 0;
     }
 
     if (beats[ptr].value >= song_info.time_signature_beats + 1)
     {
       printf("Error: Beat exceeds beats per measure at %s:%d.  Ignoring.\n",
-        tokens->get_filename(), tokens->get_line());
+        tokens.get_filename(), tokens.get_line());
       beats[ptr].value = 0;
     }
 
@@ -478,7 +473,7 @@ int Song::add_beats(
   }
 }
 
-int Song::parse_pattern(Tokens *tokens)
+int Song::parse_pattern(Tokens &tokens)
 {
   int token_type;
   char token[1024], token1[1024];
@@ -498,19 +493,19 @@ int Song::parse_pattern(Tokens *tokens)
   //time_signature_base = song_info.time_signature_base;
   midi_channel = song_info.midi_channel;
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (token_type != TOKEN_ALPHA)
   {
     printf("Error: Pattern is not alphanumeric at %s:%d\n",
-      tokens->get_filename(), tokens->get_line());
+      tokens.get_filename(), tokens.get_line());
     return -1;
   }
 
   if (patterns.find(token) != patterns.end())
   {
     printf("Error: Pattern %s is already defined at %s:%d\n",
-      token, tokens->get_filename(), tokens->get_line());
+      token, tokens.get_filename(), tokens.get_line());
     return -1;
   }
 
@@ -528,7 +523,7 @@ int Song::parse_pattern(Tokens *tokens)
 printf("parsing pattern: %s %d\n", token, index);
 #endif
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (strcmp(token, "{") != 0)
   {
@@ -541,14 +536,14 @@ printf("parsing pattern: %s %d\n", token, index);
 
   while (true)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (strcmp(token, "}") == 0) { break;}
 
     // Check if there are some modifications to the global song values.
     if (strcmp(token, "set") == 0)
     {
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (token_type != TOKEN_ALPHA)
       {
@@ -556,7 +551,7 @@ printf("parsing pattern: %s %d\n", token, index);
         return -1;
       }
 
-      token_type = tokens->get(token1);
+      token_type = tokens.get(token1);
 
       if (strcmp(token1, "=") != 0)
       {
@@ -564,7 +559,7 @@ printf("parsing pattern: %s %d\n", token, index);
         return -1;
       }
 
-      token_type = tokens->get(token1);
+      token_type = tokens.get(token1);
 
       if (token_type != TOKEN_NUMBER)
       {
@@ -589,7 +584,7 @@ printf("parsing pattern: %s %d\n", token, index);
       {
         time_signature_beats = i;
 
-        token_type = tokens->get(token1);
+        token_type = tokens.get(token1);
 
         if (strcmp(token1, "/") != 0)
         {
@@ -597,7 +592,7 @@ printf("parsing pattern: %s %d\n", token, index);
           return -1;
         }
 
-        token_type = tokens->get(token1);
+        token_type = tokens.get(token1);
 
         if (token_type != TOKEN_NUMBER)
         {
@@ -623,7 +618,7 @@ printf("parsing pattern: %s %d\n", token, index);
         if (midi_channel > 15)
         {
           printf("Warning: MIDI channel %d is higher than max 15; line %d\n",
-            midi_channel, tokens->get_line());
+            midi_channel, tokens.get_line());
           midi_channel = 9;
         }
       }
@@ -632,7 +627,7 @@ printf("parsing pattern: %s %d\n", token, index);
         printf("Warning: Cannot set '%s' in pattern.\n", token);
       }
 
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (strcmp(token, ";") != 0)
       {
@@ -658,7 +653,7 @@ printf("parsing pattern: %s %d\n", token, index);
       if (defines.find(token) == defines.end())
       {
         printf("Error: %s is undefined at %s:%d\n",
-          token, tokens->get_filename(), tokens->get_line());
+          token, tokens.get_filename(), tokens.get_line());
         return -1;
       }
 
@@ -667,7 +662,7 @@ printf("parsing pattern: %s %d\n", token, index);
       if (Utility::is_number(value) == false)
       {
         printf("Error: %s is not a number at %s:%d\n",
-          token, tokens->get_filename(), tokens->get_line());
+          token, tokens.get_filename(), tokens.get_line());
         return -1;
       }
 
@@ -758,7 +753,6 @@ for (int n = 0; n < ptr; n++)
 
         int duration = 0;
 
-
         if (count == 1)
         {
           duration = (int)((next_beat - low_beat) * beat_time);
@@ -782,7 +776,7 @@ for (int n = 0; n < ptr; n++)
   return 0;
 }
 
-int Song::parse_section(Tokens *tokens)
+int Song::parse_section(Tokens &tokens)
 {
   std::string section_name;
   Section section;
@@ -790,12 +784,12 @@ int Song::parse_section(Tokens *tokens)
   char token[1024];
   int repeat, i;
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (token_type != TOKEN_ALPHA)
   {
     printf("Error: Section is not alphanumeric on line %s:%d\n",
-      tokens->get_filename(), tokens->get_line());
+      tokens.get_filename(), tokens.get_line());
     return -1;
   }
 
@@ -805,7 +799,7 @@ printf("parsing section: %s\n", token);
 
   section_name = token;
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (strcmp(token, "{") != 0)
   {
@@ -815,7 +809,7 @@ printf("parsing section: %s\n", token);
 
   while (true)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (strcmp(token, "}") == 0)
     {
@@ -824,7 +818,7 @@ printf("parsing section: %s\n", token);
 
     if (strcmp(token, "play") == 0)
     {
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (strcmp(token, ":") != 0)
       {
@@ -835,18 +829,18 @@ printf("parsing section: %s\n", token);
       while (true)
       {
         repeat = 1;
-        token_type = tokens->get(token);
+        token_type = tokens.get(token);
 
         if (token_type == TOKEN_NUMBER)
         {
           repeat = atoi(token);
-          token_type = tokens->get(token);
+          token_type = tokens.get(token);
         }
 
         if (patterns.find(token) == patterns.end())
         {
           printf("Error: Undefined pattern '%s' at %s:%d.\n",
-            token, tokens->get_filename(), tokens->get_line());
+            token, tokens.get_filename(), tokens.get_line());
           return -1;
         }
 
@@ -854,7 +848,7 @@ printf("parsing section: %s\n", token);
 
         section.add_pattern(i, repeat);
 
-        token_type = tokens->get(token);
+        token_type = tokens.get(token);
 
         if (strcmp(token, ";") == 0)
         {
@@ -875,14 +869,14 @@ printf("parsing section: %s\n", token);
   return 0;
 }
 
-int Song::parse_song(Tokens *tokens)
+int Song::parse_song(Tokens &tokens)
 {
   int token_type;
   char token[1024];
   int repeat;
   int x;
 
-  token_type = tokens->get(token);
+  token_type = tokens.get(token);
 
   if (strcmp(token, "{") != 0)
   {
@@ -890,7 +884,7 @@ int Song::parse_song(Tokens *tokens)
     {
       song_info.set_song_name(token);
 
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (strcmp(token, "{") != 0)
       {
@@ -901,7 +895,7 @@ int Song::parse_song(Tokens *tokens)
       else
     {
       printf("Error: Expecting song name or '{' but got '%s' at %s:%d.\n",
-        token, tokens->get_filename(), tokens->get_line());
+        token, tokens.get_filename(), tokens.get_line());
       return -1;
     }
   }
@@ -911,7 +905,7 @@ int Song::parse_song(Tokens *tokens)
 
   while (true)
   {
-    token_type = tokens->get(token);
+    token_type = tokens.get(token);
 
     if (strcmp(token, "}") == 0)
     {
@@ -920,7 +914,7 @@ int Song::parse_song(Tokens *tokens)
 
     if (strcmp(token, "play") == 0)
     {
-      token_type = tokens->get(token);
+      token_type = tokens.get(token);
 
       if (strcmp(token, ":") != 0)
       {
@@ -932,12 +926,12 @@ int Song::parse_song(Tokens *tokens)
       {
         repeat = 1;
 
-        token_type = tokens->get(token);
+        token_type = tokens.get(token);
 
         if (token_type == TOKEN_NUMBER)
         {
           repeat = atoi(token);
-          token_type = tokens->get(token);
+          token_type = tokens.get(token);
         }
 
         std::string section_name = token;
@@ -954,7 +948,7 @@ int Song::parse_song(Tokens *tokens)
           if (patterns.find(token) == patterns.end())
           {
             printf("Error:  Undefined pattern '%s' at %s:%d.\n",
-              token, tokens->get_filename(), tokens->get_line());
+              token, tokens.get_filename(), tokens.get_line());
             return -1;
           }
 
@@ -966,7 +960,7 @@ int Song::parse_song(Tokens *tokens)
           }
         }
 
-        token_type = tokens->get(token);
+        token_type = tokens.get(token);
 
         if (strcmp(token, ";") == 0)
         {
@@ -1166,10 +1160,10 @@ char *Song::dirname_m(char *dir)
   return dir + i;
 }
 
-void Song::print_error(Tokens *tokens, const char *expect, const char *got)
+void Song::print_error(Tokens &tokens, const char *expect, const char *got)
 {
   printf("Error: Expected '%s' and got '%s' at %s:%d.\n",
-    expect, got, tokens->get_filename(), tokens->get_line());
+    expect, got, tokens.get_filename(), tokens.get_line());
 }
 
 void Song::signal_catch(int sig)

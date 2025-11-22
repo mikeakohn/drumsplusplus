@@ -28,7 +28,7 @@ public:
   ~Song();
 
   void set_midi(MidiFile *midi_file, MidiPlayer *midi_player);
-  int parse(Tokens *tokens);
+  int parse(Tokens &tokens);
   void print();
   void set_interactive() { interactive = 1; }
 
@@ -41,17 +41,17 @@ private:
     uint8_t volume;
   };
 
-  int parse_set(Tokens *tokens);
-  int parse_define(Tokens *tokens);
-  int parse_include(Tokens *tokens);
-  int add_beats(Tokens *tokens, Beat *beats, int &ptr, int i, int midi_channel);
-  int parse_section(Tokens *tokens);
-  int parse_pattern(Tokens *tokens);
-  int parse_song(Tokens *tokens);
+  int parse_set(Tokens &tokens);
+  int parse_define(Tokens &tokens);
+  int parse_include(Tokens &tokens);
+  int add_beats(Tokens &tokens, Beat *beats, int &ptr, int i, int midi_channel);
+  int parse_section(Tokens &tokens);
+  int parse_pattern(Tokens &tokens);
+  int parse_song(Tokens &tokens);
   int play_section(std::string &section_name);
   void play_pattern(std::string &pattern_name);
   char *dirname_m(char *dir);
-  void print_error(Tokens *tokens, const char *expect, const char *got);
+  void print_error(Tokens &tokens, const char *expect, const char *got);
   static void signal_catch(int sig);
 
   SongInfo song_info;

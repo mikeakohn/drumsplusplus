@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   if (interactive == 1) { song->set_interactive(); }
 
   song->set_midi(&midi_file, &midi_player);
-  song->parse(&tokens);
+  song->parse(tokens);
 
 #ifdef DEBUG
   song->print();
