@@ -15,7 +15,7 @@
 class Utility
 {
 public:
-  static bool is_number(char *s);
+  static bool is_number(const char *s);
 
 private:
   Utility() { }

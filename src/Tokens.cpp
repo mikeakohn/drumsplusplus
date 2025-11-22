@@ -27,9 +27,9 @@ Token Types:
 */
 
 Tokens::Tokens() :
-  in(NULL),
-  pushback(0),
-  line(1)
+  in       { NULL },
+  pushback { 0    },
+  line     { 1    }
 {
 }
 
@@ -66,7 +66,7 @@ int Tokens::get(char *token)
   ptr = 0;
   dotflag = 0;
 
-  while (1)
+  while (true)
   {
     if (pushback == 0)
     {
@@ -120,7 +120,7 @@ int Tokens::get(char *token)
           else
         if (ch == '*')
         {
-          while (1)
+          while (true)
           {
             ch = getc(in);
 

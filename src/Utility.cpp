@@ -15,14 +15,14 @@
 
 #include "Utility.h"
 
-bool Utility::is_number(char *s)
+bool Utility::is_number(const char *s)
 {
   int r = 0;
 
   while ((s[r] != ' '  && s[r] != '\t') &&
         ((s[r] != '\n' && s[r] != '\r') && s[r] != 0))
   {
-    if (s[r] < '0' || s[r] > '9') { return 0; }
+    if (s[r] < '0' || s[r] > '9') { return false; }
     r++;
   }
 

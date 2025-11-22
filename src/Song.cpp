@@ -30,7 +30,7 @@
 #include "Tokens.h"
 #include "Utility.h"
 
-Song::Song() : interactive(0)
+Song::Song() : interactive { 0 }
 {
 }
 
@@ -397,7 +397,7 @@ int Song::add_beats(
     return -1;
   }
 
-  while(1)
+  while (true)
   {
     token_type = tokens->get(token);
 
@@ -907,8 +907,8 @@ int Song::parse_song(Tokens *tokens)
     }
   }
 
-  midi_file->write_header(&song_info);
-  midi_file->write_bpm(&song_info);
+  midi_file->write_header(song_info);
+  midi_file->write_bpm(song_info);
 
   while(1)
   {
@@ -1132,12 +1132,12 @@ printf("%d %d\n", data.duration, r);
     }
       else
     {
-      note.value = data.value;
-      note.volume = data.volume;
-      note.duration = data.duration;
+      note.value        = data.value;
+      note.volume       = data.volume;
+      note.duration     = data.duration;
       note.midi_channel = data.channel;
 
-      midi_file->write_note(&song_info, &note);
+      midi_file->write_note(song_info, note);
     }
 
     //ptr++;

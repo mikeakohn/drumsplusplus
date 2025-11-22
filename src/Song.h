@@ -61,14 +61,15 @@ private:
   std::map<std::string, Pattern> patterns;
   std::map<std::string, std::string> defines;
   std::map<int, std::string> pattern_names;
+
 #ifndef WINDOWS
   struct itimerval play_timer;
 #else
   HMIDIOUT inHandle;
   DWORD play_timer;
 #endif
-  int interactive;
 
+  int interactive;
 };
 
 #endif

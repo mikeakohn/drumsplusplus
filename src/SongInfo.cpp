@@ -15,12 +15,12 @@
 #include "SongInfo.h"
 
 SongInfo::SongInfo() :
-  bpm(120),
-  default_volume(127),
-  drift(5),
-  time_signature_beats(4),
-  time_signature_base(4),
-  midi_channel(9)
+  bpm                  { 120 },
+  default_volume       { 127 },
+  drift                {   5 },
+  time_signature_beats {   4 },
+  time_signature_base  {   4 },
+  midi_channel         {   9 }
 {
   song_name = "undefined";
 }

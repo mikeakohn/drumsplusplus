@@ -22,7 +22,7 @@ public:
 
   void print();
   const char *get_song_name() { return song_name.c_str(); }
-  void set_song_name(const char *name) { song_name = name; }
+  void set_song_name(const char *value) { song_name = value; }
 
   std::string song_name;
   int bpm;

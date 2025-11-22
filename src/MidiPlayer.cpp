@@ -23,7 +23,7 @@
 
 #define DIVISIONS 240
 
-MidiPlayer::MidiPlayer() : midiout(0)
+MidiPlayer::MidiPlayer() : midiout { 0 }
 {
 }
 
