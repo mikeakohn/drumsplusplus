@@ -102,7 +102,7 @@ int Tokens::get(char *token)
 
         if (ch == '/')
         {
-          while (1)
+          while (true)
           {
             ch = getc(in);
             if (ch == '\n' || ch == '\r' || ch == EOF) { break; }

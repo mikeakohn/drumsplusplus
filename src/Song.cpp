@@ -540,7 +540,7 @@ printf("parsing pattern: %s %d\n", token, index);
   ptr = 0;
   num_notes = 0;
 
-  while(1)
+  while (true)
   {
     token_type = tokens->get(token);
 
@@ -694,7 +694,7 @@ for (int n = 0; n < ptr; n++)
 
   // Convert beat information to the pattern format.  This looks like
   // basically a slow sorting algorithm.
-  while(1)
+  while (true)
   {
     low_beat = time_signature_beats + 1;
     next_beat = time_signature_beats + 1;
@@ -814,7 +814,7 @@ printf("parsing section: %s\n", token);
     return -1;
   }
 
-  while(1)
+  while (true)
   {
     token_type = tokens->get(token);
 
@@ -833,7 +833,7 @@ printf("parsing section: %s\n", token);
         return -1;
       }
 
-      while(1)
+      while (true)
       {
         repeat = 1;
         token_type = tokens->get(token);
@@ -910,7 +910,7 @@ int Song::parse_song(Tokens *tokens)
   midi_file->write_header(song_info);
   midi_file->write_bpm(song_info);
 
-  while(1)
+  while (true)
   {
     token_type = tokens->get(token);
 
@@ -929,7 +929,7 @@ int Song::parse_song(Tokens *tokens)
         return -1;
       }
 
-      while(1)
+      while (true)
       {
         repeat = 1;
 
