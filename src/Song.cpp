@@ -586,7 +586,7 @@ printf("parsing pattern: %s %d\n", token, index);
         beat_time = 60000000 / i;
       }
         else
-      if (strcmp(token, "timesignature") == 0)
+      if (strcmp(token, "time_signature") == 0)
       {
         time_signature_beats = i;
 
