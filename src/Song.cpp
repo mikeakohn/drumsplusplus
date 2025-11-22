@@ -2,10 +2,10 @@
  *  Drums++
  *  Author: Michael Kohn
  *   Email: mike@mikekohn.net
- *     Web: http://www.mikekohn.net/
+ *     Web: https://www.mikekohn.net/
  * License: GPLv3
  *
- * Copyright 2001-2019 by Michael Kohn
+ * Copyright 2001-2025 by Michael Kohn
  *
  */
 
@@ -40,7 +40,7 @@ Song::~Song()
 
 void Song::set_midi(MidiFile *midi_file, MidiPlayer *midi_player)
 {
-  this->midi_file = midi_file;
+  this->midi_file   = midi_file;
   this->midi_player = midi_player;
 }
 
@@ -55,7 +55,7 @@ int Song::parse(Tokens *tokens)
   play_timer.it_value.tv_usec = 0;
 #endif
 
-  while(1)
+  while (true)
   {
     token_type = tokens->get(token);
 
@@ -765,10 +765,11 @@ for (int n = 0; n < ptr; n++)
           duration = (int)((next_beat - low_beat) * beat_time);
         }
 
-        pattern.add(beats[i].instrument,
-                    beats[i].volume,
-                    beats[i].channel,
-                    duration);
+        pattern.add(
+          beats[i].instrument,
+          beats[i].volume,
+          beats[i].channel,
+          duration);
 
         beats[i].value = 0;
 

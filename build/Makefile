@@ -15,13 +15,13 @@ OBJECTS= \
   Utility.o
 
 default: $(OBJECTS)
-	$(CPP) -o ../playdpp ../src/playdpp.cxx \
+	$(CPP) -o ../playdpp ../src/playdpp.cpp \
 	  $(OBJECTS) \
 	  $(CFLAGS) $(LIBS)
 
-%.o: %.cxx %.h
+%.o: %.cpp %.h
 	$(CPP) -c $< -o $*.o $(CFLAGS)
 
-%.o: %.cxx
+%.o: %.cpp
 	$(CPP) -c $< -o $*.o $(CFLAGS)
 
