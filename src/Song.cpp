@@ -202,8 +202,7 @@ int Song::parse_set(Tokens *tokens)
      song_info.drift = atoi(value);
   }
     else
-  if (strcmp(token, "time_signature") == 0 ||
-      strcmp(token, "timesignature") == 0)
+  if (strcmp(token, "time_signature") == 0)
   {
     song_info.time_signature_beats = atoi(value);
 

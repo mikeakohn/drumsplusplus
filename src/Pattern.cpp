@@ -30,9 +30,9 @@ void Pattern::add(
 {
   Data current;
 
-  current.value = value;
-  current.volume = volume;
-  current.channel = channel;
+  current.value    = value;
+  current.volume   = volume;
+  current.channel  = channel;
   current.duration = duration;
 
   data.push_back(current);
