@@ -14,9 +14,11 @@
 
 #include <string>
 
+#define TOKEN_LEN 1024
+
 enum
 {
-  TOKEN_ALPHA = 1,
+  TOKEN_ALPHA  = 1,
   TOKEN_NUMBER = 2,
   TOKEN_SYMBOL = 3,
   TOKEN_STRING = 4,
@@ -34,9 +36,17 @@ public:
   int get_line() { return line; }
   const char *get_filename() { return filename.c_str(); }
 
+  void push(const char *value, int type)
+  {
+    pushed_token      = value;
+    pushed_token_type = type;
+  }
+
 private:
   FILE *in;
   std::string filename;
+  std::string pushed_token;
+  int pushed_token_type;
   int pushback;
   int line;
 };

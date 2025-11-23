@@ -27,9 +27,10 @@ Token Types:
 */
 
 Tokens::Tokens() :
-  in       { NULL },
-  pushback { 0    },
-  line     { 1    }
+  in                { NULL },
+  pushed_token_type { 0    },
+  pushback          { 0    },
+  line              { 1    }
 {
 }
 
@@ -63,6 +64,13 @@ int Tokens::get(char *token)
   int ch, ptr;
   int dotflag;
 
+  if (pushed_token.size() != 0)
+  {
+    snprintf(token, TOKEN_LEN, "%s", pushed_token.c_str());
+    pushed_token.clear();
+    return pushed_token_type;
+  }
+
   ptr = 0;
   dotflag = 0;
 
@@ -70,7 +78,7 @@ int Tokens::get(char *token)
   {
     if (pushback == 0)
     {
-      ch=getc(in);
+      ch = getc(in);
     }
       else
     {
