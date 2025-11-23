@@ -39,6 +39,9 @@ private:
   int add_beats(Tokens &tokens, Beats &beats, int i, int midi_channel);
   int parse_section(Tokens &tokens);
   int parse_pattern(Tokens &tokens);
+  int parse_phrase(Tokens &tokens);
+  int parse_melody(Tokens &tokens);
+  int parse_play(Tokens &tokens);
   int parse_song(Tokens &tokens);
   int play_section(std::string &section_name);
   void play_pattern(std::string &pattern_name);

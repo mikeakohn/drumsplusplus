@@ -45,7 +45,7 @@ void Song::set_midi(MidiFile *midi_file)
 int Song::parse(Tokens &tokens)
 {
   int token_type;
-  char token[1024];
+  char token[TOKEN_LEN];
 
   while (true)
   {
@@ -136,9 +136,9 @@ void Song::print()
 int Song::parse_set(Tokens &tokens)
 {
   int token_type;
-  char token[1024];
-  char equals[1024];
-  char value[1024];
+  char token[TOKEN_LEN];
+  char equals[TOKEN_LEN];
+  char value[TOKEN_LEN];
 
   token_type = tokens.get(token);
 
@@ -263,8 +263,8 @@ int Song::parse_set(Tokens &tokens)
 int Song::parse_define(Tokens &tokens)
 {
   int token_type;
-  char name[1024];
-  char value[1024];
+  char name[TOKEN_LEN];
+  char value[TOKEN_LEN];
 
   token_type = tokens.get(name);
 
@@ -289,7 +289,7 @@ int Song::parse_define(Tokens &tokens)
 int Song::parse_include(Tokens &tokens)
 {
   int token_type;
-  char token[1024];
+  char token[TOKEN_LEN];
   char filename[1024];
   char lastfilename[1024];
   Tokens tokens_include;
@@ -463,8 +463,8 @@ int Song::add_beats(
 int Song::parse_pattern(Tokens &tokens)
 {
   int token_type;
-  char token[1024], token1[1024];
-  char value[1024];
+  char token[TOKEN_LEN], token1[TOKEN_LEN];
+  char value[TOKEN_LEN];
   Beats beats;
   int i, count;
   int beat_time;
@@ -695,7 +695,7 @@ int Song::parse_section(Tokens &tokens)
   std::string section_name;
   Section section;
   int token_type;
-  char token[1024];
+  char token[TOKEN_LEN];
   int repeat, i;
 
   token_type = tokens.get(token);
@@ -783,12 +783,89 @@ printf("parsing section: %s\n", token);
   return 0;
 }
 
+int Song::parse_phrase(Tokens &tokens)
+{
+  return 0;
+}
+
+int Song::parse_melody(Tokens &tokens)
+{
+  return 0;
+}
+
+int Song::parse_play(Tokens &tokens)
+{
+  int token_type;
+  char token[TOKEN_LEN];
+  int repeat;
+
+  token_type = tokens.get(token);
+
+  if (strcmp(token, ":") != 0)
+  {
+    print_error(tokens, ":", token);
+    return -1;
+  }
+
+  while (true)
+  {
+    repeat = 1;
+
+    token_type = tokens.get(token);
+
+    if (token_type == TOKEN_NUMBER)
+    {
+      repeat = atoi(token);
+      token_type = tokens.get(token);
+    }
+
+    std::string section_name = token;
+
+    if (sections.find(section_name) != sections.end())
+    {
+      for (int x = 0; x < repeat; x++)
+      {
+        play_section(section_name);
+      }
+    }
+      else
+    {
+      if (patterns.find(token) == patterns.end())
+      {
+        printf("Error:  Undefined pattern '%s' at %s:%d.\n",
+          token, tokens.get_filename(), tokens.get_line());
+        return -1;
+      }
+
+      std::string pattern_name = token;
+
+      for (int x = 0; x < repeat; x++)
+      {
+        play_pattern(pattern_name);
+      }
+    }
+
+    token_type = tokens.get(token);
+
+    if (strcmp(token, ";") == 0)
+    {
+      break;
+    }
+      else
+    if (strcmp(token, ",") != 0)
+    {
+      print_error(tokens, ",", token);
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
 int Song::parse_song(Tokens &tokens)
 {
   int token_type;
-  char token[1024];
-  int repeat;
-  int x;
+  char token[TOKEN_LEN];
 
   token_type = tokens.get(token);
 
@@ -828,65 +905,7 @@ int Song::parse_song(Tokens &tokens)
 
     if (strcmp(token, "play") == 0)
     {
-      token_type = tokens.get(token);
-
-      if (strcmp(token, ":") != 0)
-      {
-        print_error(tokens, ":", token);
-        return -1;
-      }
-
-      while (true)
-      {
-        repeat = 1;
-
-        token_type = tokens.get(token);
-
-        if (token_type == TOKEN_NUMBER)
-        {
-          repeat = atoi(token);
-          token_type = tokens.get(token);
-        }
-
-        std::string section_name = token;
-
-        if (sections.find(section_name) != sections.end())
-        {
-          for (x = 0; x < repeat; x++)
-          {
-            play_section(section_name);
-          }
-        }
-          else
-        {
-          if (patterns.find(token) == patterns.end())
-          {
-            printf("Error:  Undefined pattern '%s' at %s:%d.\n",
-              token, tokens.get_filename(), tokens.get_line());
-            return -1;
-          }
-
-          std::string pattern_name = token;
-
-          for (x = 0; x < repeat; x++)
-          {
-            play_pattern(pattern_name);
-          }
-        }
-
-        token_type = tokens.get(token);
-
-        if (strcmp(token, ";") == 0)
-        {
-          break;
-        }
-          else
-        if (strcmp(token, ",") != 0)
-        {
-          print_error(tokens, ",", token);
-          return -1;
-        }
-      }
+      if (parse_play(tokens) != 0) { return -1; }
     }
   }
 
