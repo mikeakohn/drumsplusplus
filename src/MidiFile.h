@@ -34,7 +34,7 @@ public:
 private:
   int write_int32(int n);
   int write_int16(int n);
-  void write_var(int i);
+  void write_var(int value);
 
   FILE *out;
   long marker;

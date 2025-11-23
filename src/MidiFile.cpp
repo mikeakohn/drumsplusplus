@@ -196,13 +196,16 @@ int MidiFile::write_int16(int n)
   return 0;
 }
 
-void MidiFile::write_var(int i)
+void MidiFile::write_var(int value)
 {
   int t, k;
 
+  // This really should never happen.
+  if (value < 0) { value = 0; }
+
   t = 7;
 
-  while ((i >> t) != 0)
+  while ((value >> t) != 0)
   {
     t = t + 7;
   }
@@ -213,11 +216,11 @@ void MidiFile::write_var(int i)
   {
     if (k != 0)
     {
-      putc(((i >> k) & 127) + 128, out);
+      putc(((value >> k) & 127) + 128, out);
     }
       else
     {
-      putc(((i >> k) & 127), out);
+      putc(((value >> k) & 127), out);
     }
   }
 }

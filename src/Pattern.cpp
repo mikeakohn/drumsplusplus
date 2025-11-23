@@ -40,7 +40,7 @@ void Pattern::add(
 
 void Pattern::print()
 {
-  printf("  -- Pattern %s -- \n", name.c_str());
+  printf("  -- Pattern %s --\n", name.c_str());
 
   for (auto it = data.begin(); it != data.end(); it++)
   {

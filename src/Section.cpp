@@ -34,7 +34,7 @@ void Section::add_pattern(int index, int repeat)
 
 void Section::print()
 {
-  printf("  -- Section -- \n");
+  printf("  -- Section --\n");
 
   for (auto it = patterns.begin(); it != patterns.end(); it++)
   {
