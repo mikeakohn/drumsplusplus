@@ -33,6 +33,15 @@ public:
     {
     }
 
+    void print() const
+    {
+      printf("  Beat: [ %f, %d, %d, %d ]\n",
+        value,
+        instrument,
+        channel,
+        volume);
+    }
+
     float value;
     int instrument;
     int channel;

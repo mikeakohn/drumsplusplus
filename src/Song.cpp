@@ -336,20 +336,18 @@ int Song::parse_include(Tokens &tokens)
 
 int Song::add_beats(
   Tokens &tokens,
-  Beat *beats,
-  int &ptr,
-  int i,
+  Beats &beats,
+  int instrument,
   int midi_channel)
 {
   int token_type;
-  char token[1024];
-  int m, modifier, c;
+  char token[TOKEN_LEN];
+  int m, modifier;
 
   // This will read an entire line of beats from a pattern for
   // a single instrument in that pattern.
 
   modifier = 0;
-  c = 0;
 
   token_type = tokens.get(token);
 
@@ -387,17 +385,40 @@ int Song::add_beats(
   {
     token_type = tokens.get(token);
 
-    if (strcmp(token, ";") == 0) return 0;
+    if (strcmp(token, ";") == 0) { return 0; }
+
+    if (token_type != TOKEN_NUMBER)
+    {
+      print_error(tokens, "a beat number", token);
+      continue;
+    }
+
+    Beats::Beat beat;
+
+    beat.value      = atof(token);
+    beat.instrument = instrument;
+    beat.channel    = midi_channel;
+
+    if (beat.value < 1)
+    {
+      printf("Error: Beat is less than 1 at %s:%d.  Ignoring.\n",
+        tokens.get_filename(), tokens.get_line());
+      continue;
+    }
+
+    if (beat.value >= song_info.time_signature_beats + 1)
+    {
+      printf("Error: Beat exceeds beats per measure at %s:%d.  Ignoring.\n",
+        tokens.get_filename(), tokens.get_line());
+      continue;
+    }
+
+    beat.volume = song_info.default_volume;
+
+    token_type = tokens.get(token);
 
     if (strcmp(token, ":") == 0)
     {
-      if (c == 0)
-      {
-        printf("Error: Unexpected token '%s' at %s:%d.\n",
-          token, tokens.get_filename(), tokens.get_line());
-        return -1;
-      }
-
       token_type = tokens.get(token);
 
       if (strcmp(token, "%") == 0)
@@ -425,43 +446,17 @@ int Song::add_beats(
 
       m = m + modifier;
 
-      if (m < 0) { m = 0; }
+      if (m < 0)   { m = 0;   }
       if (m > 127) { m = 127; }
 
-      // FIXME: This is a bad way to do this.  Would be better to check
-      // if a : exist after reading the beat values.
-      beats[ptr - 1].volume = m;
-      continue;
+      beat.volume = m;
     }
-
-    if (token_type != TOKEN_NUMBER)
+      else
     {
-      print_error(tokens, "a beat number", token);
-      continue;
+      tokens.push(token, token_type);
     }
 
-    beats[ptr].value = atof(token);
-    beats[ptr].instrument = i;
-    beats[ptr].channel = midi_channel;
-
-    if (beats[ptr].value < 1)
-    {
-      printf("Error: Beat is less than 1 at %s:%d.  Ignoring.\n",
-        tokens.get_filename(), tokens.get_line());
-      beats[ptr].value = 0;
-    }
-
-    if (beats[ptr].value >= song_info.time_signature_beats + 1)
-    {
-      printf("Error: Beat exceeds beats per measure at %s:%d.  Ignoring.\n",
-        tokens.get_filename(), tokens.get_line());
-      beats[ptr].value = 0;
-    }
-
-    beats[ptr].volume = song_info.default_volume;
-
-    ptr++;
-    c++;
+    beats.add(beat);
   }
 }
 
@@ -469,20 +464,15 @@ int Song::parse_pattern(Tokens &tokens)
 {
   int token_type;
   char token[1024], token1[1024];
-  Beat beats[256];
-  int ptr;
   char value[1024];
-  float low_beat = 0;
-  float next_beat = 0;
-  int i, count, num_notes;
+  Beats beats;
+  int i, count;
   int beat_time;
   int time_signature_beats;
-  //int time_signature_base;
   int midi_channel;
 
   beat_time = 60000000 / song_info.bpm;
   time_signature_beats = song_info.time_signature_beats;
-  //time_signature_base = song_info.time_signature_base;
   midi_channel = song_info.midi_channel;
 
   token_type = tokens.get(token);
@@ -511,10 +501,6 @@ int Song::parse_pattern(Tokens &tokens)
   pattern.set_name(pattern_name);
   pattern.set_index(index);
 
-#ifdef DEBUG
-printf("parsing pattern: %s %d\n", token, index);
-#endif
-
   token_type = tokens.get(token);
 
   if (strcmp(token, "{") != 0)
@@ -522,9 +508,6 @@ printf("parsing pattern: %s %d\n", token, index);
     print_error(tokens, "{", token);
     return -1;
   }
-
-  ptr = 0;
-  num_notes = 0;
 
   while (true)
   {
@@ -599,8 +582,6 @@ printf("parsing pattern: %s %d\n", token, index);
           print_error(tokens, "a non-zero integer", token1);
           return -1;
         }
-
-        //time_signature_base = i;
       }
         else
       if (strcmp(token, "midi_channel") == 0)
@@ -633,9 +614,7 @@ printf("parsing pattern: %s %d\n", token, index);
     // Read next line of beat information for an instrument from a pattern.
     if (token_type == TOKEN_NUMBER)
     {
-      beats[ptr].channel = midi_channel;
-
-      if (add_beats(tokens, beats, ptr, atoi(token), midi_channel) == -1)
+      if (add_beats(tokens, beats, atoi(token), midi_channel) == -1)
       {
         return -1;
       }
@@ -658,112 +637,55 @@ printf("parsing pattern: %s %d\n", token, index);
         return -1;
       }
 
-      beats[ptr].channel = midi_channel;
-
-      if (add_beats(tokens, beats, ptr, atoi(value), midi_channel) == -1)
+      if (add_beats(tokens, beats, atoi(value), midi_channel) == -1)
       {
         return -1;
       }
     }
   }
 
-#ifdef DEBUG
-for (int n = 0; n < ptr; n++)
-{
-  printf("beat: %d %d %f %d\n",
-    beats[n].instrument,
-    beats[n].channel,
-    beats[n].value,
-    beats[n].volume);
-}
-#endif
+  // After reading all the beats, build the pattern based on a
+  // sorted version of what was read in from the .dpp source.
 
-  // Convert beat information to the pattern format.  This looks like
-  // basically a slow sorting algorithm.
-  while (true)
+  //beats.print();
+
+  const float end_beat  = time_signature_beats + 1;
+
+  Beats::Beat temp_beat;
+
+  count = 0;
+
+  for (auto &beat : beats.beats)
   {
-    low_beat = time_signature_beats + 1;
-    next_beat = time_signature_beats + 1;
-    count = 0;
-
-    // Find the next lowest beat value and a count of how many
-    // times that beat value exists.
-    for (i = 0; i < ptr; i++)
+    if (count != 0)
     {
-      if (beats[i].value > 0)
-      {
-        if (beats[i].value < low_beat)
-        {
-          low_beat = beats[i].value;
-          count = 0;
-        }
+      int duration = (int)((beat.value - temp_beat.value) * beat_time);
 
-        if (beats[i].value == low_beat) { count++; }
-      }
+      pattern.add(
+        temp_beat.instrument,
+        temp_beat.volume,
+        temp_beat.channel,
+        duration);
     }
 
-    // If no more beats were found, break from adding to the pattern list.
-    if (count == 0)
-    {
-      if (ptr == 0)
-      {
-        // If this is the first beat, add an empty pattern?
-        int duration = (int)((time_signature_beats) * beat_time);
+    temp_beat = beat;
 
-        pattern.add(0, 0, midi_channel, duration);
-      }
-
-      break;
-    }
-
-    // Find the next lowest value.  It seems like this whole process
-    // could be done without doing this.
-    for (i = 0; i < ptr; i++)
-    {
-      if (beats[i].value > 0)
-      {
-        if (beats[i].value < next_beat && beats[i].value != low_beat)
-        {
-          next_beat = beats[i].value;
-        }
-      }
-    }
-
-    // Scan through all the beats, and if it is equal to the current
-    // lowest, add it to the pattern.  Then clear it out so it doesn't
-    // get counted again.
-    for (i = 0; i < ptr; i++)
-    {
-      if (beats[i].value == low_beat)
-      {
-        if (num_notes == 0 && low_beat != 1)
-        {
-          int duration = (int)((low_beat - 1) * beat_time);
-
-          pattern.add(0, 0, midi_channel, duration);
-        }
-
-        int duration = 0;
-
-        if (count == 1)
-        {
-          duration = (int)((next_beat - low_beat) * beat_time);
-        }
-
-        pattern.add(
-          beats[i].instrument,
-          beats[i].volume,
-          beats[i].channel,
-          duration);
-
-        beats[i].value = 0;
-
-        count--;
-      }
-    }
-
-    num_notes++;
+    count++;
   }
+
+  // Add the last beat to the pattern.
+  if (temp_beat.value != 0.0)
+  {
+    int duration = (int)((end_beat - temp_beat.value) * beat_time);
+
+    pattern.add(
+      temp_beat.instrument,
+      temp_beat.volume,
+      temp_beat.channel,
+      duration);
+  }
+
+  //pattern.print();
 
   return 0;
 }

@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <map>
 
+#include "Beats.h"
 #include "MidiFile.h"
 #include "Pattern.h"
 #include "Section.h"
@@ -32,18 +33,10 @@ public:
   void set_interactive() { interactive = 1; }
 
 private:
-  struct Beat
-  {
-    float value;
-    int instrument;
-    int channel;
-    uint8_t volume;
-  };
-
   int parse_set(Tokens &tokens);
   int parse_define(Tokens &tokens);
   int parse_include(Tokens &tokens);
-  int add_beats(Tokens &tokens, Beat *beats, int &ptr, int i, int midi_channel);
+  int add_beats(Tokens &tokens, Beats &beats, int i, int midi_channel);
   int parse_section(Tokens &tokens);
   int parse_pattern(Tokens &tokens);
   int parse_song(Tokens &tokens);

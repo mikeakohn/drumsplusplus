@@ -3,15 +3,17 @@ CC=gcc
 CPP=g++
 
 #DEBUG=-DDEBUG
-CFLAGS=-Wall -O3 -std=c++11 $(DEBUG)
+#CFLAGS=-Wall -O3 -std=c++11 $(DEBUG)
+CFLAGS=-Wall -g -std=c++11 $(DEBUG)
 OBJECTS= \
-  Tokens.o \
+  Beats.o \
   MidiFile.o \
   Pattern.o \
   Section.o \
   Song.o \
   SongInfo.o \
-  Utility.o
+  Utility.o \
+  Tokens.o
 
 default: $(OBJECTS)
 	$(CPP) -o ../playdpp ../src/playdpp.cpp \

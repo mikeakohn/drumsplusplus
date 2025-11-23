@@ -24,12 +24,6 @@ Beats::~Beats()
 
 void Beats::add(Beat &beat)
 {
-printf("Beat::add() %f %d %d %d\n",
-  beat.value,
-  beat.instrument,
-  beat.channel,
-  beat.volume);
-
   beats.insert(beat);
 }
 
