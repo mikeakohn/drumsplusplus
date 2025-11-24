@@ -31,6 +31,8 @@ public:
   void write_bpm(const SongInfo &song_info);
   void write_time_signature(const SongInfo &song_info);
 
+  int get_divisions() { return divisions; }
+
 private:
   int write_int32(int n);
   int write_int16(int n);
@@ -38,6 +40,7 @@ private:
 
   FILE *out;
   long marker;
+  int divisions;
 };
 
 #endif

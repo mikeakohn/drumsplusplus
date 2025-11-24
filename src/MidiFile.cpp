@@ -17,11 +17,10 @@
 #include "Note.h"
 #include "SongInfo.h"
 
-#define DIVISIONS 240
-
 MidiFile::MidiFile() :
-  out    { NULL },
-  marker { 0 }
+  out       { NULL },
+  marker    { 0 },
+  divisions { 240 }
 {
 }
 
@@ -60,7 +59,7 @@ void MidiFile::write_header(const SongInfo &song_info)
   write_int32(6);
   write_int16(0);
   write_int16(1);
-  write_int16(DIVISIONS);
+  write_int16(divisions);
 
   fprintf(out, "MTrk");
   marker = ftell(out);
@@ -88,7 +87,7 @@ void MidiFile::write_note(const SongInfo &song_info, const Note &note)
 
   if (!is_open()) { return; }
 
-  d = (int)((float)DIVISIONS * ((float)note.duration / (float)(60000000 / song_info.bpm)));
+  d = (int)((float)divisions * ((float)note.duration / (float)(60000000 / song_info.bpm)));
 
   write_var(0);
   putc(0x90 + note.midi_channel, out);
@@ -168,11 +167,11 @@ void MidiFile::write_time_signature(const SongInfo &song_info)
 
   if (d == 3)
   {
-    putc(DIVISIONS / 3, out);
+    putc(divisions / 3, out);
   }
     else
   {
-    putc(DIVISIONS, out);
+    putc(divisions, out);
   }
 
   putc(8, out);

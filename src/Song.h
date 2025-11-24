@@ -18,8 +18,10 @@
 #include "Beats.h"
 #include "MidiFile.h"
 #include "Pattern.h"
+#include "Phrase.h"
 #include "Section.h"
 #include "Tokens.h"
+#include "Tones.h"
 
 class Song
 {
@@ -30,7 +32,7 @@ public:
   void set_midi(MidiFile *midi_file);
   int parse(Tokens &tokens);
   void print();
-  void set_interactive() { interactive = 1; }
+  void set_interactive() { interactive = true; }
 
 private:
   int parse_set(Tokens &tokens);
@@ -39,6 +41,7 @@ private:
   int add_beats(Tokens &tokens, Beats &beats, int i, int midi_channel);
   int parse_section(Tokens &tokens);
   int parse_pattern(Tokens &tokens);
+  int parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel);
   int parse_phrase(Tokens &tokens);
   int parse_melody(Tokens &tokens);
   int parse_play(Tokens &tokens);
@@ -52,8 +55,10 @@ private:
   MidiFile *midi_file;
   std::map<std::string, Section> sections;
   std::map<std::string, Pattern> patterns;
+  std::map<std::string, Phrase> phrases;
   std::map<std::string, std::string> defines;
   std::map<int, std::string> pattern_names;
+  std::map<int, std::string> phrase_names;
 
   bool interactive;
 };

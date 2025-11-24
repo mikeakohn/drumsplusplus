@@ -22,33 +22,38 @@ Pattern::~Pattern()
 {
 }
 
+void Pattern::add(MidiData &data)
+{
+  midi_data.push_back(data);
+}
+
 void Pattern::add(
   uint8_t value,
   uint8_t volume,
   uint8_t channel,
   uint32_t duration)
 {
-  Data current;
+  MidiData midi_data;
 
-  current.value    = value;
-  current.volume   = volume;
-  current.channel  = channel;
-  current.duration = duration;
+  midi_data.value    = value;
+  midi_data.volume   = volume;
+  midi_data.channel  = channel;
+  midi_data.duration = duration;
 
-  data.push_back(current);
+  add(midi_data);
 }
 
 void Pattern::print()
 {
   printf("  -- Pattern %s --\n", name.c_str());
 
-  for (auto it = data.begin(); it != data.end(); it++)
+  for (auto &it : midi_data)
   {
     printf("   value: %d, volume: %d, channel: %d, duration: %d\n",
-      it->value,
-      it->volume,
-      it->channel,
-      it->duration);
+      it.value,
+      it.volume,
+      it.channel,
+      it.duration);
   }
 }
 

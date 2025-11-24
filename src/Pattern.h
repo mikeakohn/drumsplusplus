@@ -17,36 +17,30 @@
 #include <string>
 #include <vector>
 
+#include "MidiData.h"
+
 class Pattern
 {
 public:
   Pattern();
   ~Pattern();
 
-  struct Data
-  {
-    Data() : value(0), volume(0), channel(0), duration(0) { }
-    uint8_t value;
-    uint8_t volume;
-    uint8_t channel;
-    uint32_t duration;
-  };
-
   void set_name(std::string &value) { name = value; }
   void set_index(int value)         { index = value; }
 
   int get_index()         { return index; }
   std::string &get_name() { return name; }
-  int get_count()         { return data.size(); }
+  int get_count()         { return midi_data.size(); }
 
-  Data &get_data(int index) { return data[index]; }
+  MidiData &get_data(int index) { return midi_data[index]; }
 
+  void add(MidiData &midi_data);
   void add(uint8_t value, uint8_t volume, uint8_t channel, uint32_t duration);
   void print();
 
 private:
   std::string name;
-  std::vector<Data> data;
+  std::vector<MidiData> midi_data;
   int index;
 };
 

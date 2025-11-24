@@ -9,11 +9,13 @@ OBJECTS= \
   Beats.o \
   MidiFile.o \
   Pattern.o \
+  Phrase.o \
   Section.o \
   Song.o \
   SongInfo.o \
   Utility.o \
-  Tokens.o
+  Tokens.o \
+  Tones.o
 
 default: $(OBJECTS)
 	$(CPP) -o ../playdpp ../src/playdpp.cpp \

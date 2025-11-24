@@ -36,9 +36,9 @@ void Section::print()
 {
   printf("  -- Section --\n");
 
-  for (auto it = patterns.begin(); it != patterns.end(); it++)
+  for (auto &it : patterns)
   {
-    printf(" %d", *it);
+    printf(" %d", it);
   }
 
   printf("\n");
