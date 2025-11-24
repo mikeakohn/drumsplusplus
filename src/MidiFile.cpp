@@ -19,8 +19,9 @@
 
 MidiFile::MidiFile() :
   out       { NULL },
-  marker    { 0 },
-  divisions { 240 }
+  marker    {    0 },
+  divisions {  240 },
+  tracks    {    0 }
 {
 }
 
@@ -49,29 +50,36 @@ void MidiFile::close()
   }
 }
 
-void MidiFile::write_header(const SongInfo &song_info)
+void MidiFile::write_header()
 {
-  const char *info = "Created by Drums++ 2.0 (https://www.mikekohn.net/).";
-
   if (!is_open()) { return; }
 
   fprintf(out, "MThd");
   write_int32(6);
   write_int16(0);
-  write_int16(1);
+  write_int16(tracks);
   write_int16(divisions);
+}
+
+void MidiFile::write_track_start(const std::string &track_name)
+{
+  if (!is_open()) { return; }
+
+  add_track();
+
+  const char *info = "Created by Drums++ 2.0 (https://www.mikekohn.net/).";
 
   fprintf(out, "MTrk");
   marker = ftell(out);
   write_int32(0);
 
-  if (song_info.song_name != "")
+  if (track_name != "")
   {
     write_var(0);
     putc(0xff, out);
     putc(0x03, out);
-    write_var(song_info.song_name.size());
-    fprintf(out, "%s", song_info.song_name.c_str());
+    write_var(track_name.size());
+    fprintf(out, "%s", track_name.c_str());
   }
 
   write_var(0);
@@ -105,17 +113,19 @@ void MidiFile::write_note(const SongInfo &song_info, const Note &note)
   }
 }
 
-void MidiFile::write_footer()
+void MidiFile::write_track_end()
 {
   int i;
 
   if (!is_open()) { return; }
 
+  // Add END_OF_TRACK MetaEvent.
   write_var(0);
   putc(0xff, out);
   putc(0x2f, out);
   putc(0x00, out);
 
+  // Compute size of track and update track header.
   i = ftell(out);
   fseek(out, marker, 0);
   write_int32((i - marker) - 4);
@@ -175,6 +185,16 @@ void MidiFile::write_time_signature(const SongInfo &song_info)
   }
 
   putc(8, out);
+}
+
+void MidiFile::add_track()
+{
+  tracks += 1;
+
+  long marker = ftell(out);
+  fseek(out, 10, SEEK_SET);
+  write_int16(tracks);
+  fseek(out, marker, SEEK_SET);
 }
 
 int MidiFile::write_int32(int n)

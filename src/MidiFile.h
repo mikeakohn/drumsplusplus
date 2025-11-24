@@ -12,6 +12,12 @@
 #ifndef DPP_MIDI_FILE_H
 #define DPP_MIDI_FILE_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#include <string>
+
 #include "Note.h"
 #include "SongInfo.h"
 
@@ -25,13 +31,16 @@ public:
   void close();
   bool is_open() { return out != NULL; }
 
-  void write_header(const SongInfo &song_info);
+  void write_header();
+  void write_track_start(const std::string &track_name);
   void write_note(const SongInfo &song_info, const Note &note);
-  void write_footer();
+  void write_track_end();
   void write_bpm(const SongInfo &song_info);
   void write_time_signature(const SongInfo &song_info);
 
   int get_divisions() { return divisions; }
+
+  void add_track();
 
 private:
   int write_int32(int n);
@@ -41,6 +50,7 @@ private:
   FILE *out;
   long marker;
   int divisions;
+  int tracks;
 };
 
 #endif

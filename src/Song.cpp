@@ -938,7 +938,6 @@ int Song::parse_phrase(Tokens &tokens)
 {
   int token_type;
   char token[TOKEN_LEN], token1[TOKEN_LEN];
-  //char value[TOKEN_LEN];
   Tones tones;
   int i, count;
   int beat_time;
@@ -1151,6 +1150,54 @@ int Song::parse_phrase(Tokens &tokens)
 
 int Song::parse_melody(Tokens &tokens)
 {
+  char token[TOKEN_LEN];
+  int token_type;
+  int repeat;
+  std::string track_name = song_info.song_name;
+
+  token_type = tokens.get(token);
+
+  if (token_type == TOKEN_ALPHA)
+  {
+    track_name = token;
+    token_type = tokens.get(token);
+  }
+
+  if (strcmp(token, ":") != 0)
+  {
+    print_error(tokens, ":", token);
+    return -1;
+  }
+
+  midi_file->write_track_start(track_name);
+  midi_file->write_bpm(song_info);
+
+  while (true)
+  {
+    repeat = 1;
+
+    token_type = tokens.get(token);
+
+    if (token_type == TOKEN_NUMBER)
+    {
+      repeat = atoi(token);
+
+      token_type = tokens.get(token);
+    }
+
+    token_type = tokens.get(token);
+
+    if (strcmp(token, ";") == 0) { break; }
+
+    if (strcmp(token, ",") != 0)
+    {
+      print_error(tokens, ",", token);
+      return -1;
+    }
+  }
+
+  midi_file->write_track_end();
+
   return 0;
 }
 
@@ -1159,14 +1206,24 @@ int Song::parse_play(Tokens &tokens)
   int token_type;
   char token[TOKEN_LEN];
   int repeat;
+  std::string track_name = song_info.song_name;
 
   token_type = tokens.get(token);
+
+  if (token_type == TOKEN_ALPHA)
+  {
+    track_name = token;
+    token_type = tokens.get(token);
+  }
 
   if (strcmp(token, ":") != 0)
   {
     print_error(tokens, ":", token);
     return -1;
   }
+
+  midi_file->write_track_start(track_name);
+  midi_file->write_bpm(song_info);
 
   while (true)
   {
@@ -1220,6 +1277,8 @@ int Song::parse_play(Tokens &tokens)
     }
   }
 
+  midi_file->write_track_end();
+
   return 0;
 }
 
@@ -1252,8 +1311,7 @@ int Song::parse_song(Tokens &tokens)
     }
   }
 
-  midi_file->write_header(song_info);
-  midi_file->write_bpm(song_info);
+  midi_file->write_header();
 
   while (true)
   {
@@ -1268,9 +1326,12 @@ int Song::parse_song(Tokens &tokens)
     {
       if (parse_play(tokens) != 0) { return -1; }
     }
+      else
+    if (strcmp(token, "melody") == 0)
+    {
+      if (parse_melody(tokens) == -1) { return -1; }
+    }
   }
-
-  midi_file->write_footer();
 
   return 0;
 }

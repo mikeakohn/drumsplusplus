@@ -1,0 +1,58 @@
+include "drum_defines.inc"
+
+set bpm = 110;
+set default_volume = 127;
+set time_signature = 4/4;
+
+pattern click_track
+{
+  closed_hihat: 1 2 3 4;
+}
+
+pattern intro
+{
+  closed_hihat:  1 2 3 4;
+  snare:         1;
+  crash_cymbal1: 1;
+}
+
+pattern main_1
+{
+  bassdrum:     1   3 3.5;
+  snare:          2       4;
+  closed_hihat: 1 2 3     4;
+}
+
+pattern main_2
+{
+  bassdrum:     1     3     4;
+  snare:           2    3.5   4.5;
+  closed_hihat: 1  2  3       4;
+}
+
+section start
+{
+  play: click_track, intro, click_track;
+}
+
+section main
+{
+  play: 3 main_1, main_2, 3 main_1, main_2;
+}
+
+phrase phrase_1
+{
+  set midi_channel = 1;
+
+  voice: 4 A4, 4 B4, 8 B4, 8 B4, 4 C4;
+  voice: 4 C4, 4 R,  4 R,        4 E4;
+  voice: 4 E4, 4 R,  4 R,        4 G4;
+}
+
+song test_song
+{
+  play drum_track: start, 2 main;
+
+  melody chords: phrase_1, phrase_1;
+}
+
