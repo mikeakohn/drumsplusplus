@@ -46,8 +46,9 @@ private:
   int parse_melody(Tokens &tokens);
   int parse_play(Tokens &tokens);
   int parse_song(Tokens &tokens);
-  int play_section(std::string &section_name);
-  void play_pattern(std::string &pattern_name);
+  int play_section(std::string &name);
+  void play_pattern(std::string &name);
+  int play_phrase(std::string &name);
   char *dirname_m(char *dir);
   void print_error(Tokens &tokens, const char *expect, const char *got);
 

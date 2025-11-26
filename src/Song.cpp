@@ -806,7 +806,9 @@ printf("parsing section: %s\n", token);
 
 int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
 {
-  int beat_time = 60000000 / song_info.bpm;
+  //const int beat_time = 60000000 / song_info.bpm;
+  const int divisions = midi_file->get_divisions();
+  float location = 0;
 
   char token[TOKEN_LEN];
 
@@ -914,11 +916,14 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
 
     Tones::Tone tone;
 
-    tone.length  = beat_time * duration;
-    tone.value   = value;
-    tone.channel = midi_channel;
-    tone.volume  = song_info.default_volume;
+    tone.location = location;
+    tone.value    = value;
+    tone.length   = divisions * duration;
+    tone.channel  = midi_channel;
+    tone.volume   = song_info.default_volume;
     tones.add(tone);
+
+    location += duration;
 
     tokens.get(token);
 
@@ -940,12 +945,13 @@ int Song::parse_phrase(Tokens &tokens)
   char token[TOKEN_LEN], token1[TOKEN_LEN];
   Tones tones;
   int i, count;
-  int beat_time;
-  int time_signature_beats;
+  //int beat_time;
+  //int time_signature_beats;
   int midi_channel;
+  int divisions = midi_file->get_divisions();
 
-  beat_time = 60000000 / song_info.bpm;
-  time_signature_beats = song_info.time_signature_beats;
+  //beat_time = 60000000 / song_info.bpm;
+  //time_signature_beats = song_info.time_signature_beats;
   midi_channel = 1;
 
   token_type = tokens.get(token);
@@ -1023,6 +1029,7 @@ int Song::parse_phrase(Tokens &tokens)
         return -1;
       }
 
+#if 0
       if (strcmp(token, "bpm") == 0)
       {
         beat_time = 60000000 / i;
@@ -1057,6 +1064,7 @@ int Song::parse_phrase(Tokens &tokens)
         }
       }
         else
+#endif
       if (strcmp(token, "midi_channel") == 0)
       {
         midi_channel = i;
@@ -1107,7 +1115,7 @@ int Song::parse_phrase(Tokens &tokens)
 
   //tones.print();
 
-  const float end_beat = time_signature_beats + 1;
+  //const float end_beat = time_signature_beats + 1;
 
   Tones::Tone temp_tone;
 
@@ -1117,13 +1125,14 @@ int Song::parse_phrase(Tokens &tokens)
   {
     if (count != 0)
     {
-      int duration = (int)((tone.value - temp_tone.value) * beat_time);
+      //int duration = (int)((tone.value - temp_tone.value) * beat_time);
 
       phrase.add(
         temp_tone.value,
         temp_tone.volume,
         temp_tone.channel,
-        duration);
+        temp_tone.length,
+        temp_tone.location * divisions);
     }
 
     temp_tone = tone;
@@ -1134,13 +1143,14 @@ int Song::parse_phrase(Tokens &tokens)
   // Add the last tone to the phrase.
   if (temp_tone.value != 0.0)
   {
-    int duration = (int)((end_beat - temp_tone.value) * beat_time);
+    //int duration = (int)((end_beat - temp_tone.value) * beat_time);
 
     phrase.add(
       temp_tone.value,
       temp_tone.volume,
       temp_tone.channel,
-      duration);
+      temp_tone.length,
+      temp_tone.location * divisions);
   }
 
   //phrase.print();
@@ -1183,6 +1193,13 @@ int Song::parse_melody(Tokens &tokens)
       repeat = atoi(token);
 
       token_type = tokens.get(token);
+    }
+
+    std::string phrase_name = token;
+
+    for (int i = 0; i < repeat; i++)
+    {
+      play_phrase(phrase_name);
     }
 
     token_type = tokens.get(token);
@@ -1336,23 +1353,23 @@ int Song::parse_song(Tokens &tokens)
   return 0;
 }
 
-int Song::play_section(std::string &section_name)
+int Song::play_section(std::string &name)
 {
-  if (sections.find(section_name) == sections.end())
+  if (sections.find(name) == sections.end())
   {
-    printf("Could not find section %s\n", section_name.c_str());
+    printf("Could not find section %s\n", name.c_str());
     return -1;
   }
 
-  Section &section = sections[section_name];
+  Section &section = sections[name];
 
   if (interactive)
   {
-    printf("Section: %s\n", section_name.c_str());
+    printf("Section: %s\n", name.c_str());
   }
 
 #ifdef DEBUG
-printf("playing section: %s\n", section_name.c_str());
+printf("playing section: %s\n", name.c_str());
 #endif
 
   std::vector<int> &patterns = section.get_patterns();
@@ -1373,20 +1390,20 @@ printf("playing section: %s\n", section_name.c_str());
   return 0;
 }
 
-void Song::play_pattern(std::string &pattern_name)
+void Song::play_pattern(std::string &name)
 {
   int index, count;
   Note note;
 
-  Pattern &pattern = patterns[pattern_name];
+  Pattern &pattern = patterns[name];
 
   if (interactive)
   {
-    printf("Pattern: %s", pattern_name.c_str());
+    printf("Pattern: %s", name.c_str());
   }
 
 #ifdef DEBUG
-printf("  Playing pattern %s\n", pattern_name.c_str());
+printf("  Playing pattern %s\n", name.c_str());
 printf("[ ");
 #endif
 
@@ -1412,6 +1429,41 @@ printf("%x %x %x, ",
 #ifdef DEBUG
 printf(" ]\n");
 #endif
+}
+
+int Song::play_phrase(std::string &name)
+{
+  if (phrases.find(name) == phrases.end())
+  {
+    printf("Could not find phrase %s\n", name.c_str());
+    return -1;
+  }
+
+  Phrase &phrase = phrases[name];
+
+  phrase.print();
+
+  //int division = 0;
+
+  int count = phrase.get_count();
+
+  for (int i = 0; i < count; i++)
+  {
+    MidiData &midi_data = phrase.get_data(i);
+
+    midi_file->write_note_on(
+      midi_data.value,
+      midi_data.channel,
+      0,
+      midi_data.volume);
+
+    midi_file->write_note_off(
+      midi_data.value,
+      midi_data.channel,
+      midi_data.duration);
+  }
+
+  return 0;
 }
 
 char *Song::dirname_m(char *dir)

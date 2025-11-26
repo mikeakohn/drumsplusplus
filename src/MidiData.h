@@ -20,7 +20,8 @@ struct MidiData
     value    { 0 },
     volume   { 0 },
     channel  { 0 },
-    duration { 0 }
+    duration { 0 },
+    location { 0 }
   {
   }
 
@@ -28,6 +29,7 @@ struct MidiData
   uint8_t volume;
   uint8_t channel;
   uint32_t duration;
+  uint32_t location;
 };
 
 #endif

@@ -35,7 +35,14 @@ public:
   MidiData &get_data(int index) { return midi_data[index]; }
 
   void add(MidiData &midi_data);
-  void add(uint8_t value, uint8_t volume, uint8_t channel, uint32_t duration);
+
+  void add(
+    uint8_t value,
+    uint8_t volume,
+    uint8_t channel,
+    uint32_t duration,
+    uint32_t location);
+
   void print();
 
 private:

@@ -26,39 +26,42 @@ public:
   struct Tone
   {
     Tone() :
-      length  { 0.0 },
-      value   { 0 },
-      channel { 0 },
-      volume  { 0 }
+      location { 0.0 },
+      value    { 0 },
+      length   { 0 },
+      channel  { 0 },
+      volume   { 0 }
     {
     }
 
     void print() const
     {
-      printf("  Tone: [ %f, %d, %d, %d ]\n",
-        length,
+      printf("  Tone: [ %f, %d, %d, %d, %d ]\n",
+        location,
         value,
+        length,
         channel,
         volume);
     }
 
-    float length;
+    float location;
     int value;
+    int length;
     int channel;
     uint8_t volume;
   };
 
   void add(Tone &tone);
-  void add(float length, int instrument, int channel, uint8_t volume);
+  void add(float location, int value, int length, int channel, uint8_t volume);
   void print();
 
   struct Compare
   {
     bool operator()(const Tone &lhs, const Tone &rhs) const
     {
-      if (lhs.length == rhs.length) { return lhs.value < rhs.value; }
+      if (lhs.location == rhs.location) { return lhs.value < rhs.value; }
 
-      return lhs.length < rhs.length;
+      return lhs.location < rhs.location;
     }
   };
 

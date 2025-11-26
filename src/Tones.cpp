@@ -27,14 +27,20 @@ void Tones::add(Tone &tone)
   tones.insert(tone);
 }
 
-void Tones::add(float length, int value, int channel, uint8_t volume)
+void Tones::add(
+  float location,
+  int value,
+  int length,
+  int channel,
+  uint8_t volume)
 {
   Tone tone;
 
-  tone.length  = length;
-  tone.value   = value;
-  tone.channel = channel;
-  tone.volume  = volume;
+  tone.location = location;
+  tone.value    = value;
+  tone.length   = length;
+  tone.channel  = channel;
+  tone.volume   = volume;
 
   add(tone);
 }
@@ -45,9 +51,10 @@ void Tones::print()
 
   for (auto &tone : tones)
   {
-    printf(" [ %f, %d, %d, %d ]\n",
-      tone.length,
+    printf(" [ %f, %d, %d, %d, %d ]\n",
+      tone.location,
       tone.value,
+      tone.length,
       tone.channel,
       tone.volume);
   }

@@ -54,9 +54,12 @@ void MidiFile::write_header()
 {
   if (!is_open()) { return; }
 
+  // Format 0 is single track. Format 1 is multitrack.
+  const int format = 1;
+
   fprintf(out, "MThd");
   write_int32(6);
-  write_int16(0);
+  write_int16(format);
   write_int16(tracks);
   write_int16(divisions);
 }
@@ -97,20 +100,45 @@ void MidiFile::write_note(const SongInfo &song_info, const Note &note)
 
   d = (int)((float)divisions * ((float)note.duration / (float)(60000000 / song_info.bpm)));
 
+  write_note_on(note.value, note.midi_channel, 0, note.volume);
+  write_note_off(note.value, note.midi_channel, d);
+
+#if 0
   write_var(0);
   putc(0x90 + note.midi_channel, out);
 
   putc(note.value, out);
   putc(note.volume, out);
 
-  /* if (d != 0 || 1 == 1) */
-  {
-    write_var(d);
-    putc(0x80 + note.midi_channel, out);
-    putc(note.value, out);
-    /* putc(0, out); */
-    putc(64, out);
-  }
+  write_var(d);
+  putc(0x80 + note.midi_channel, out);
+  putc(note.value, out);
+  putc(64, out);
+#endif
+}
+
+void MidiFile::write_note_on(
+  int value,
+  int midi_channel,
+  int divisions,
+  int volume)
+{
+  if (!is_open()) { return; }
+
+  write_var(divisions);
+  putc(0x90 + midi_channel, out);
+  putc(value, out);
+  putc(volume, out);
+}
+
+void MidiFile::write_note_off(int value, int midi_channel, int divisions)
+{
+  if (!is_open()) { return; }
+
+  write_var(divisions);
+  putc(0x80 + midi_channel, out);
+  putc(value, out);
+  putc(0, out);
 }
 
 void MidiFile::write_track_end()

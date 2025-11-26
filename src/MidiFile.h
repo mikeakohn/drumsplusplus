@@ -34,6 +34,8 @@ public:
   void write_header();
   void write_track_start(const std::string &track_name);
   void write_note(const SongInfo &song_info, const Note &note);
+  void write_note_on(int value, int midi_channel, int divisions, int volume);
+  void write_note_off(int value, int midi_channel, int divisions);
   void write_track_end();
   void write_bpm(const SongInfo &song_info);
   void write_time_signature(const SongInfo &song_info);

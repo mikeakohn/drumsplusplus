@@ -31,7 +31,8 @@ void Phrase::add(
   uint8_t value,
   uint8_t volume,
   uint8_t channel,
-  uint32_t duration)
+  uint32_t duration,
+  uint32_t location)
 {
   MidiData midi_data;
 
@@ -39,6 +40,7 @@ void Phrase::add(
   midi_data.volume   = volume;
   midi_data.channel  = channel;
   midi_data.duration = duration;
+  midi_data.location = location;
 
   add(midi_data);
 }
@@ -49,11 +51,12 @@ void Phrase::print()
 
   for (auto &it : midi_data)
   {
-    printf("   value: %d, volume: %d, channel: %d, duration: %d\n",
+    printf("  value: %d, volume: %d, channel: %d, duration: %d, location: %d\n",
       it.value,
       it.volume,
       it.channel,
-      it.duration);
+      it.duration,
+      it.location);
   }
 }
 
