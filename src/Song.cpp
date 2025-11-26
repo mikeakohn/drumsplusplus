@@ -25,6 +25,7 @@
 
 #include "MidiFile.h"
 #include "Note.h"
+#include "NoteOff.h"
 #include "Song.h"
 #include "Tokens.h"
 #include "Utility.h"
@@ -1441,26 +1442,62 @@ int Song::play_phrase(std::string &name)
 
   Phrase &phrase = phrases[name];
 
-  phrase.print();
+  //phrase.print();
 
-  //int division = 0;
+  std::set<NoteOff, CompareNoteOff> note_offs;
 
   int count = phrase.get_count();
+  int index = 0;
+  uint32_t location = 0;
+  uint32_t location_last_note_off = 0;
 
-  for (int i = 0; i < count; i++)
+  while (index != count || !note_offs.empty())
   {
-    MidiData &midi_data = phrase.get_data(i);
+    while (index < count)
+    {
+      MidiData &midi_data = phrase.get_data(index);
 
-    midi_file->write_note_on(
-      midi_data.value,
-      midi_data.channel,
-      0,
-      midi_data.volume);
+      if (midi_data.location != location) { break; }
 
-    midi_file->write_note_off(
-      midi_data.value,
-      midi_data.channel,
-      midi_data.duration);
+      if (midi_data.value != 0)
+      {
+        midi_file->write_note_on(
+          midi_data.value,
+          midi_data.channel,
+          0,
+          midi_data.volume);
+      }
+
+      NoteOff note_off;
+      note_off.location = location + midi_data.duration;
+      note_off.value    = midi_data.value;
+      note_off.channel  = midi_data.channel;
+
+      note_offs.insert(note_off);
+
+      index += 1;
+    }
+
+    if (!note_offs.empty())
+    {
+      while (true)
+      {
+        auto note_off = note_offs.begin();
+
+        if (note_off->location != location) { break; }
+
+        midi_file->write_note_off(
+          note_off->value,
+          note_off->channel,
+          location - location_last_note_off);
+
+        note_offs.erase(*note_off);
+
+        location_last_note_off = location;
+      }
+    }
+
+    location += 1;
   }
 
   return 0;
