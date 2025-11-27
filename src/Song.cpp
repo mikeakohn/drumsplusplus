@@ -807,7 +807,6 @@ printf("parsing section: %s\n", token);
 
 int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
 {
-  //const int beat_time = 60000000 / song_info.bpm;
   const int divisions = midi_file->get_divisions();
   float location = 0;
 
@@ -842,7 +841,9 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
       switch (token[0])
       {
         case 'w': duration = 4;   break;
+        case '1': duration = 4;   break;
         case 'h': duration = 2;   break;
+        case '2': duration = 2;   break;
         case 'q': duration = 1;   break;
         case '4': duration = 1;   break;
         case 'e': duration = 0.5; break;
@@ -946,13 +947,9 @@ int Song::parse_phrase(Tokens &tokens)
   char token[TOKEN_LEN], token1[TOKEN_LEN];
   Tones tones;
   int i, count;
-  //int beat_time;
-  //int time_signature_beats;
   int midi_channel;
   int divisions = midi_file->get_divisions();
 
-  //beat_time = 60000000 / song_info.bpm;
-  //time_signature_beats = song_info.time_signature_beats;
   midi_channel = 1;
 
   token_type = tokens.get(token);
@@ -1126,8 +1123,6 @@ int Song::parse_phrase(Tokens &tokens)
   {
     if (count != 0)
     {
-      //int duration = (int)((tone.value - temp_tone.value) * beat_time);
-
       phrase.add(
         temp_tone.value,
         temp_tone.volume,
@@ -1142,10 +1137,8 @@ int Song::parse_phrase(Tokens &tokens)
   }
 
   // Add the last tone to the phrase.
-  if (temp_tone.value != 0.0)
+  if (count != 0)
   {
-    //int duration = (int)((end_beat - temp_tone.value) * beat_time);
-
     phrase.add(
       temp_tone.value,
       temp_tone.volume,
