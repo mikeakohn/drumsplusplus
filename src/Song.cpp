@@ -922,7 +922,7 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
     tone.value    = value;
     tone.length   = divisions * duration;
     tone.channel  = midi_channel;
-    tone.volume   = song_info.default_volume;
+    tone.volume   = value != 0 ? song_info.default_volume : 0;
     tones.add(tone);
 
     location += duration;
@@ -1112,8 +1112,6 @@ int Song::parse_phrase(Tokens &tokens)
   // sorted version of what was read in from the .dpp source.
 
   //tones.print();
-
-  //const float end_beat = time_signature_beats + 1;
 
   Tones::Tone temp_tone;
 
@@ -1446,6 +1444,25 @@ int Song::play_phrase(std::string &name)
 
   while (index != count || !note_offs.empty())
   {
+    if (!note_offs.empty())
+    {
+      while (true)
+      {
+        auto note_off = note_offs.begin();
+
+        if (note_off->location != location) { break; }
+
+        midi_file->write_note_off(
+          note_off->value,
+          note_off->channel,
+          location - location_last_note_off);
+
+        note_offs.erase(*note_off);
+
+        location_last_note_off = location;
+      }
+    }
+
     while (index < count)
     {
       MidiData &midi_data = phrase.get_data(index);
@@ -1469,25 +1486,6 @@ int Song::play_phrase(std::string &name)
       note_offs.insert(note_off);
 
       index += 1;
-    }
-
-    if (!note_offs.empty())
-    {
-      while (true)
-      {
-        auto note_off = note_offs.begin();
-
-        if (note_off->location != location) { break; }
-
-        midi_file->write_note_off(
-          note_off->value,
-          note_off->channel,
-          location - location_last_note_off);
-
-        note_offs.erase(*note_off);
-
-        location_last_note_off = location;
-      }
     }
 
     location += 1;
