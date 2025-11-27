@@ -235,6 +235,24 @@ again:
   token[ptr] = 0;
   if (ptr == 0) { return -1; }
 
+  //printf("%s %s\n", token, show_token_type(token_type));
+
   return token_type;
+}
+
+const char *Tokens::show_token_type(int token_type)
+{
+  if (token_type > TOKEN_STRING) { return "TOKEN_UNKNOWN"; }
+
+  const char *names[] =
+  {
+    "TOKEN_ALPHA",
+    "TOKEN_NUMBER",
+    "TOKEN_SYMBOL",
+    "TOKEN_STRING",
+    "TOKEN_UNKNOWN"
+  };
+
+  return names[token_type];
 }
 

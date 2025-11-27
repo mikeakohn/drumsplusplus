@@ -18,10 +18,11 @@
 
 enum
 {
-  TOKEN_ALPHA  = 1,
-  TOKEN_NUMBER = 2,
-  TOKEN_SYMBOL = 3,
-  TOKEN_STRING = 4,
+  TOKEN_UNKNOWN = 0,
+  TOKEN_ALPHA   = 1,
+  TOKEN_NUMBER  = 2,
+  TOKEN_SYMBOL  = 3,
+  TOKEN_STRING  = 4,
 };
 
 class Tokens
@@ -35,6 +36,8 @@ public:
   int get(char *token);
   int get_line() { return line; }
   const char *get_filename() { return filename.c_str(); }
+
+  const char *show_token_type(int token_type);
 
   void push(const char *value, int type)
   {

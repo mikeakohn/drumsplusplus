@@ -811,6 +811,7 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
   float location = 0;
 
   char token[TOKEN_LEN];
+  int token_type;
 
   while (true)
   {
@@ -860,57 +861,79 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
 
     tokens.get(token);
 
-    int i = 0;
+    bool is_flat = false;
+    int len = strlen(token);
 
-    while (token[i] != 0)
+    if (len != 0 && token[len - 1] == 'b')
     {
-      if (i == 0)
-      {
-        switch (token[i])
-        {
-          case 'r': value =  0; break;
-          case 'a': value = 21; break;
-          case 'b': value = 23; break;
-          case 'c': value = 24; break;
-          case 'd': value = 26; break;
-          case 'e': value = 28; break;
-          case 'f': value = 29; break;
-          case 'g': value = 31; break;
-          default:
-            print_error(tokens, "MIDI tone", token);
-            return -1;
-        }
-      }
-        else
-      if (i == 1)
-      {
-        if (token[i] < '0' || token[i] > '9' || value == 0)
-        {
-          print_error(tokens, "MIDI tone", token);
-          return -1;
-        }
+      token[len - 1] = 0;
+      is_flat = true;
+    }
 
-        octave = token[i] - '0';
-      }
-        else
-      if (i == 2)
+    switch (token[0])
+    {
+      case 'r': value =  0; break;
+      case 'a': value = 21; break;
+      case 'b': value = 23; break;
+      case 'h': value = 23; break;
+      case 'c': value = 24; break;
+      case 'd': value = 26; break;
+      case 'e': value = 28; break;
+      case 'f': value = 29; break;
+      case 'g': value = 31; break;
+      default:
+        print_error(tokens, "tone", token);
+        return -1;
+    }
+
+    if (token[1] >= '0' && token[1] <= '9')
+    {
+      octave = token[1] - '0';
+
+      if (token[2] != 0)
       {
-        switch (token[i])
-        {
-          case 'b': mod = -1; break;
-          case '#': mod = +1; break;
-          default:
-            print_error(tokens, "MIDI tone", token);
-            return -1;
-        }
-      }
-        else
-      {
-        print_error(tokens, "MIDI tone", token);
+        print_error(tokens, "tone", token);
         return -1;
       }
+    }
+      else
+    if (token[1] != 0)
+    {
+      print_error(tokens, "tone", token);
+      return -1;
+    }
 
-      i++;
+    if (is_flat)
+    {
+      tokens.push("b", TOKEN_ALPHA);
+    }
+
+    while (true)
+    {
+      token_type = tokens.get(token);
+
+      if (strcmp(token, "#") == 0)
+      {
+        mod = +1;
+      }
+        else
+      if (strcmp(token, "b") == 0)
+      {
+        mod = -1;
+      }
+        else
+      if (strcmp(token, "0.") == 0)
+      {
+        // The 0. is a screwiness in the tokenizer, probably there on
+        // on purpose to deal with numbers .something instead of
+        // 0.something. Could fix that later.
+        duration += duration / 2;
+      }
+        else
+      {
+        tokens.push(token, token_type);
+        break;
+      }
     }
 
     value = value + (octave * 12);
