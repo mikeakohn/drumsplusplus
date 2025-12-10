@@ -44,9 +44,9 @@ phrase phrase_1
 {
   set midi_channel = 1;
 
-  voice: 4 A4, 4 B4, 8 B4, 8 B4, 4 C4;
-  voice: 4 C4, 4 R,  4 R,        4 E4;
-  voice: 4 E4, 4 R,  4 R,        4 G4;
+  voice: 4 A4, 4 B4, 8 B4, 8 B4, 4 C5;
+  voice: 4 C5, 4 R,  4 R,        4 E5;
+  voice: 4 E5, 4 R,  4 R,        4 G5;
 }
 
 song test_song

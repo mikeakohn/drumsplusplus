@@ -861,67 +861,48 @@ int Song::parse_voice(Tokens &tokens, Tones &tones, int i, int midi_channel)
 
     tokens.get(token);
 
-    bool is_flat = false;
-    int len = strlen(token);
-
-    if (len != 0 && token[len - 1] == 'b')
-    {
-      token[len - 1] = 0;
-      is_flat = true;
-    }
-
-    switch (token[0])
-    {
-      case 'r': value =  0; break;
-      case 'a': value = 21; break;
-      case 'b': value = 23; break;
-      case 'h': value = 23; break;
-      case 'c': value = 24; break;
-      case 'd': value = 26; break;
-      case 'e': value = 28; break;
-      case 'f': value = 29; break;
-      case 'g': value = 31; break;
-      default:
-        print_error(tokens, "tone", token);
-        return -1;
-    }
-
-    if (token[1] >= '0' && token[1] <= '9')
-    {
-      octave = token[1] - '0';
-
-      if (token[2] != 0)
-      {
-        print_error(tokens, "tone", token);
-        return -1;
-      }
-    }
-      else
-    if (token[1] != 0)
+    if (token[0] == 0)
     {
       print_error(tokens, "tone", token);
       return -1;
     }
 
-    if (is_flat)
+    for (int i = 0; token[i] != 0; i++)
     {
-      tokens.push("b", TOKEN_ALPHA);
+      if (token[i] >= '0' && token[i] <= '9')
+      {
+        octave = token[i] - '0';
+        continue;
+      }
+
+      if (token[i] == 'b' && i != 0)
+      {
+        mod -= 1;
+        continue;
+      }
+
+      switch (token[i])
+      {
+        case 'r': value =  0; break;
+        case 'c': value = 12; break;
+        case 'd': value = 14; break;
+        case 'e': value = 16; break;
+        case 'f': value = 17; break;
+        case 'g': value = 19; break;
+        case 'a': value = 21; break;
+        case 'b': value = 23; break;
+        case 'h': value = 23; break;
+        case '#': mod += 1; break;
+        default:
+          print_error(tokens, "tone", token);
+          return -1;
+      }
     }
 
     while (true)
     {
       token_type = tokens.get(token);
 
-      if (strcmp(token, "#") == 0)
-      {
-        mod = +1;
-      }
-        else
-      if (strcmp(token, "b") == 0)
-      {
-        mod = -1;
-      }
-        else
       if (strcmp(token, "0.") == 0)
       {
         // The 0. is a screwiness in the tokenizer, probably there on

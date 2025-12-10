@@ -193,6 +193,12 @@ again:
         token[ptr++] = ch;
       }
         else
+      if (ch == '#')
+      {
+        // Tone can be A#5 or A5# or such.
+        token[ptr++] = ch;
+      }
+        else
       {
         pushback = ch;
         break;
